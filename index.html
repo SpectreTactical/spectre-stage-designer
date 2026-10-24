@@ -587,6 +587,9 @@ var TYPES = {
   cbarrel:   { n: "Barrel (blue)",        k: "prop", pre: "BB" },
   vtac:      { n: "V-Tac barricade",      k: "line", pre: "VT", oneClick: 1.2 },
   wall:      { n: "Wall",                 k: "line" },
+  concrete:  { n: "Concrete wall (fixed)", k: "line", oneClick: 3, infra: true },
+  tyres:     { n: "Tyre wall (fixed)",    k: "line", oneClick: 2.4, infra: true },
+  backstop:  { n: "Backstop (270° range)", k: "line", oneClick: 6, infra: true },
   fault:     { n: "Fault line",           k: "line" },
   door:      { n: "Door",                 k: "prop", w: 0.9 },
   port:      { n: "Window / port",        k: "prop", w: 0.6 },
@@ -600,12 +603,14 @@ var FPAL_GROUPS = [
   ["Steel", ["steel_fall","popper","steel_hang","lr_plate","steel_torso"]],
   ["Positions", ["sp","cone","start"]],
   ["Barrels & V-Tac", ["cbarrel","barrel","vtac"]],
-  ["Props", ["wall","door","port","table","barricade","fault","text"]]
+  ["Props", ["wall","door","port","table","barricade","fault","text"]],
+  ["Range infrastructure", ["concrete","tyres","backstop"]]
 ];
 var PALETTE = [
   ["Targets", ["ipsc","idpa","bh","qit","noshoot","steel_fall","steel_hang","popper","lr_plate","steel_torso"]],
   ["Positions", ["sp","cone","start"]],
-  ["Props", ["cbarrel","vtac","barrel","wall","door","port","table","barricade","fault","text"]]
+  ["Props", ["cbarrel","vtac","barrel","wall","door","port","table","barricade","fault","text"]],
+  ["Range infrastructure", ["concrete","tyres","backstop"]]
 ];
 function isTarget(it){ return TYPES[it.type] && TYPES[it.type].k === "target"; }
 function isSteel(it){ return !!(TYPES[it.type] && TYPES[it.type].steel); }
@@ -807,6 +812,8 @@ function sgPartText(sg){
   if(b) out.push((b > 1 ? b + " × " : "") + "1 rd buckshot, 2 best pairs");
   return out.join(" + ");
 }
+/* stage uses the shotgun only: default 1 round per target */
+function sgOnly(st){ return st.firearms.length === 1 && st.firearms[0] === "shotgun"; }
 function defaultReq(st, t){
   var tr = targetRounds(st, t.id);
   /* one-hit steel: 1 hit on unlimited and limited stages alike */
@@ -825,7 +832,7 @@ function defaultReq(st, t){
     return { mode: "sg", n: 2 + sgN, need: null, desc: "best 2 " + ofa + " + " + sgPartText(tr.sg) };
   }
   if(st.limited && tr.any && tr.fixed && tr.rounds > 0) return { mode: "all", n: tr.rounds };
-  if(tr.firearms.length === 1 && tr.firearms[0] === "shotgun") return { mode: "fixed", n: 1, why: "shotgun" };
+  if((tr.firearms.length === 1 && tr.firearms[0] === "shotgun") || (!tr.any && sgOnly(st))) return { mode: "fixed", n: 1, why: "shotgun" };
   return { mode: "best2", n: 2 };
 }
 /* returns { mode, n (required hits), scored, text, short, auto } */
@@ -1182,9 +1189,51 @@ function labelPos(it, u){
   if(isTarget(it)) return { dy: -0.66 * u };
   return null;
 }
+
+/* fixed range infrastructure: concrete wall, tyre wall, 270° backstop (line items, drawn to scale in metres) */
+var INFRA_C = { concrete: "#8d8f91", concreteS: "#4a4c4e", tyre: "#1b1b1b", tyreIn: "#6d6d6d", berm: "#7a5230", bermS: "#4a3018", safe: "#2e7d32" };
+function infraSVG(it, u, o, attrs, sel){
+  var X1 = n2(it.x), Y1 = n2(-it.y), X2 = n2(it.x2), Y2 = n2(-it.y2), out = '<g' + attrs + ' class="it it-' + it.type + '">';
+  var L = Math.hypot(it.x2 - it.x, it.y2 - it.y) || 0.001, ux = (it.x2 - it.x) / L, uy = -(it.y2 - it.y) / L, nx = uy, ny = -ux; /* svg coords; n = left normal (downrange for a left→right line) */
+  var ang = Math.atan2(uy, ux) * 180 / Math.PI, tang = ang > 90 || ang < -90 ? ang + 180 : ang, mx = (it.x + it.x2) / 2, my = -(it.y + it.y2) / 2;
+  if(o.edit) out += '<line x1="' + X1 + '" y1="' + Y1 + '" x2="' + X2 + '" y2="' + Y2 + '" stroke="transparent" stroke-width="' + n2(Math.max(u * 0.6, 0.8)) + '"/>';
+  if(it.type === "concrete"){
+    var w = 0.4;
+    out += '<line x1="' + X1 + '" y1="' + Y1 + '" x2="' + X2 + '" y2="' + Y2 + '" stroke="' + INFRA_C.concreteS + '" stroke-width="' + n2(w + 0.08) + '" stroke-linecap="butt"/>';
+    out += '<line x1="' + X1 + '" y1="' + Y1 + '" x2="' + X2 + '" y2="' + Y2 + '" stroke="' + INFRA_C.concrete + '" stroke-width="' + n2(w) + '" stroke-linecap="butt"/>';
+    var nb = Math.max(1, Math.round(L / 1.2));
+    for(var k = 1; k < nb; k++){ var px = it.x + (it.x2 - it.x) * k / nb, py = -(it.y + (it.y2 - it.y) * k / nb);
+      out += '<line x1="' + n2(px - nx * w / 2) + '" y1="' + n2(py - ny * w / 2) + '" x2="' + n2(px + nx * w / 2) + '" y2="' + n2(py + ny * w / 2) + '" stroke="' + INFRA_C.concreteS + '" stroke-width="0.04"/>'; }
+    for(var j = 0; j < L / 0.35; j++){ var f = (j + 0.5) / (L / 0.35), sx = it.x + (it.x2 - it.x) * f, sy = -(it.y + (it.y2 - it.y) * f), off = ((j * 37) % 7 - 3) / 3 * w * 0.3;
+      out += '<circle cx="' + n2(sx + nx * off) + '" cy="' + n2(sy + ny * off) + '" r="0.025" fill="#6b6d6f"/>'; }
+  } else if(it.type === "tyres"){
+    var r = 0.3, nt = Math.max(1, Math.round(L / (2 * r)));
+    for(var t = 0; t < nt; t++){ var g = (t + 0.5) / nt, cx = it.x + (it.x2 - it.x) * g, cy = -(it.y + (it.y2 - it.y) * g);
+      out += '<circle cx="' + n2(cx) + '" cy="' + n2(cy) + '" r="' + n2(r * 0.96) + '" fill="' + INFRA_C.tyre + '"/><circle cx="' + n2(cx) + '" cy="' + n2(cy) + '" r="' + n2(r * 0.62) + '" fill="none" stroke="' + INFRA_C.tyreIn + '" stroke-width="0.04" stroke-dasharray="0.06 0.05"/><circle cx="' + n2(cx) + '" cy="' + n2(cy) + '" r="' + n2(r * 0.4) + '" fill="#cfcfcf"/>'; }
+  } else {
+    var bw = 0.7;
+    out += '<line x1="' + X1 + '" y1="' + Y1 + '" x2="' + X2 + '" y2="' + Y2 + '" stroke="' + INFRA_C.bermS + '" stroke-width="' + n2(bw + 0.1) + '" stroke-linecap="round"/>';
+    out += '<line x1="' + X1 + '" y1="' + Y1 + '" x2="' + X2 + '" y2="' + Y2 + '" stroke="' + INFRA_C.berm + '" stroke-width="' + n2(bw) + '" stroke-linecap="round"/>';
+    out += '<text x="' + n2(mx) + '" y="' + n2(my) + '" dy="0.17" text-anchor="middle" font-size="0.46" font-weight="800" fill="#fff" letter-spacing="0.03" font-family="Barlow Condensed,Bahnschrift,Arial Narrow,sans-serif" transform="rotate(' + n2(tang) + ' ' + n2(mx) + ' ' + n2(my) + ')">Backstop</text>';
+  }
+  if(it.label){ var lx = mx + nx * -0.6, ly = my + ny * -0.6; out += '<text x="' + n2(lx) + '" y="' + n2(ly) + '" text-anchor="middle" font-size="' + n2(u * 0.3) + '" fill="#333" font-weight="700">' + esc(it.label) + '</text>'; }
+  if(sel){
+    out += '<line x1="' + X1 + '" y1="' + Y1 + '" x2="' + X2 + '" y2="' + Y2 + '" stroke="#1f6fff" stroke-width="' + n2(u * 0.04) + '" stroke-dasharray="' + n2(u * 0.15) + '"/>';
+    out += '<circle data-h="a" data-hid="' + it.id + '" cx="' + X1 + '" cy="' + Y1 + '" r="' + n2(u * 0.18) + '" fill="#fff" stroke="#1f6fff" stroke-width="' + n2(u * 0.05) + '"/>';
+    out += '<circle data-h="b" data-hid="' + it.id + '" cx="' + X2 + '" cy="' + Y2 + '" r="' + n2(u * 0.18) + '" fill="#fff" stroke="#1f6fff" stroke-width="' + n2(u * 0.05) + '"/>';
+  }
+  return out + '</g>';
+}
+/* small key / palette icons for the infrastructure types */
+function infraIcon(t, vb){
+  if(t === "concrete") return '<svg viewBox="' + vb + '"><rect x="-0.55" y="-0.11" width="1.1" height="0.22" fill="' + INFRA_C.concrete + '" stroke="' + INFRA_C.concreteS + '" stroke-width="0.04"/><path d="M-0.18,-0.11 V0.11 M0.18,-0.11 V0.11" stroke="' + INFRA_C.concreteS + '" stroke-width="0.03"/></svg>';
+  if(t === "tyres") return '<svg viewBox="' + vb + '">' + [-0.4, 0, 0.4].map(function(x){ return '<circle cx="' + x + '" cy="0" r="0.19" fill="' + INFRA_C.tyre + '"/><circle cx="' + x + '" cy="0" r="0.08" fill="#cfcfcf"/>'; }).join("") + '</svg>';
+  return '<svg viewBox="' + vb + '"><line x1="-0.55" y1="0" x2="0.55" y2="0" stroke="' + INFRA_C.berm + '" stroke-width="0.22" stroke-linecap="round"/></svg>';
+}
 function itemSVG(it, u, o){
   var T = TYPES[it.type], sel = o.sel && o.sel[it.id], out = "";
   var attrs = o.edit ? ' data-id="' + it.id + '"' : "";
+  if(isLine(it) && TYPES[it.type].infra) return infraSVG(it, u, o, attrs, sel);
   if(isLine(it)){
     var X1 = n2(it.x), Y1 = n2(-it.y), X2 = n2(it.x2), Y2 = n2(-it.y2);
     var col = it.type === "wall" ? C.wall : it.type === "vtac" ? C.vtac : "#a0522d", w = it.type === "wall" ? u * 0.11 : it.type === "vtac" ? u * 0.2 : u * 0.07;
@@ -1218,7 +1267,7 @@ function itemSVG(it, u, o){
   } else {
     out += '<g transform="rotate(' + (it.rot || 0) + ')">' + symbol(it, u) + '</g>';
     var lp = labelPos(it, u);
-    if(lp && it.label){
+    if(lp && it.label && !(o.print && isTarget(it))){
       var inside = lp.inside, fill = inside ? (it.type === "sp" ? C.navy : "#fff") : "#111";
       var fs = inside ? (it.type === "start" ? u * 0.24 : (it.label.length > 3 ? u * 0.24 : u * 0.32)) : u * 0.34;
       out += '<text class="lbl" text-anchor="middle" y="' + n2(lp.dy) + '" font-size="' + n2(fs) + '" font-weight="800" fill="' + fill + '" font-family="Barlow Condensed,Bahnschrift,Arial Narrow,sans-serif">' + esc(it.label) + '</text>';
@@ -1269,6 +1318,7 @@ function sceneSVG(st, u, o){
   var low = items.filter(function(i){ return layerOrder(i) <= 1; }), high = items.filter(function(i){ return layerOrder(i) > 1; });
   var s = "";
   low.forEach(function(it){ s += itemSVG(it, u, o); });
+  if(o.print){ var pl = printLayout(st, u); s += pl.lines + pathSVG(st, u); high.forEach(function(it){ s += itemSVG(it, u, o); }); return s + pl.labels; }
   s += sightLines(st, u) + pathSVG(st, u);
   high.forEach(function(it){ s += itemSVG(it, u, o); });
   return s;
@@ -1294,7 +1344,7 @@ function diagramSVG(st, wmm, hmm, opts){
   var minX = cx - vw / 2, minY = cyTop - (vh - bh) * 0.32;
   var s = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + n2(minX) + ' ' + n2(minY) + ' ' + n2(vw) + ' ' + n2(vh) + '"' + (opts.px ? ' width="' + opts.px[0] + '" height="' + opts.px[1] + '"' : ' preserveAspectRatio="xMidYMid meet"') + ' font-family="Barlow,Segoe UI,Arial,sans-serif">' + svgDefs();
   if(opts.bg) s += '<rect x="' + n2(minX) + '" y="' + n2(minY) + '" width="' + n2(vw) + '" height="' + n2(vh) + '" fill="#fff"/>';
-  s += sceneSVG(st, u, {});
+  s += sceneSVG(st, u, { print: true });
   /* DOWNRANGE arrow */
   var ax = minX + vw * 0.035, ay = minY + vh * 0.45, al = vh * 0.18, fs = Math.min(vw, vh) * 0.028, dr = +st.downrange || 0;
   s += '<g class="drarrow" transform="rotate(' + n2(dr) + ' ' + n2(ax) + ' ' + n2(ay - al / 2) + ')"><line x1="' + n2(ax) + '" y1="' + n2(ay) + '" x2="' + n2(ax) + '" y2="' + n2(ay - al) + '" stroke="#4a5160" stroke-width="' + n2(fs * 0.18) + '"/><polygon points="' + n2(ax - fs * 0.45) + ',' + n2(ay - al) + ' ' + n2(ax + fs * 0.45) + ',' + n2(ay - al) + ' ' + n2(ax) + ',' + n2(ay - al - fs * 0.9) + '" fill="#4a5160"/>';
@@ -1309,6 +1359,91 @@ function diagramSVG(st, wmm, hmm, opts){
 function keySymbol(type, extra){
   var it = Object.assign({ type: type, x: 0, y: 0, rot: 0, label: "" }, extra || {});
   return '<svg viewBox="-0.6 -0.6 1.2 1.2" xmlns="http://www.w3.org/2000/svg">' + svgDefs() + '<g>' + symbol(it, 1) + '</g></svg>';
+}
+
+/* ---- print / export only: grouped steel sight lines, merged distance tags, label collision avoidance ---- */
+function distRangeText(ds){ var a = Math.min.apply(null, ds), b = Math.max.apply(null, ds), fa = fmtM(a), fb = fmtM(b); return fa === fb ? fa : fa.replace(" m", "") + "–" + fb; }
+function boxHit(a, b){ return a.x0 < b.x1 && a.x1 > b.x0 && a.y0 < b.y1 && a.y1 > b.y0; }
+function printLayout(st, u){
+  var items = byId(st), seen = {}, pairs = [];
+  st.engagements.forEach(function(e){ var p = items[e.pos], t = items[e.target]; if(!p || !t) return; var k = p.id + ">" + t.id; if(seen[k]) return; seen[k] = 1; var d = dist(p, t); if(d < 0.01) return; pairs.push({ e: e, p: p, t: t, d: d }); });
+  /* 1. per position: cluster engaged steel within 1.5 m (chained) */
+  var byPos = {}, posOrder = [];
+  pairs.forEach(function(q){ if(!byPos[q.p.id]){ byPos[q.p.id] = []; posOrder.push(q.p.id); } byPos[q.p.id].push(q); });
+  var rays = []; /* { p, tx, ty, ds:[], ids:[], tlabels:[], grp } */
+  posOrder.forEach(function(pid){
+    var qs = byPos[pid], steel = qs.filter(function(q){ return isSteel(q.t); }), par = {};
+    steel.forEach(function(q){ par[q.t.id] = q.t.id; });
+    function f(x){ while(par[x] !== x) x = par[x] = par[par[x]]; return x; }
+    for(var i = 0; i < steel.length; i++) for(var j = i + 1; j < steel.length; j++) if(dist(steel[i].t, steel[j].t) < 1.45) par[f(steel[i].t.id)] = f(steel[j].t.id);
+    var groups = {}, done = {};
+    steel.forEach(function(q){ var r = f(q.t.id); (groups[r] = groups[r] || []).push(q); });
+    qs.forEach(function(q){
+      if(done[q.t.id]) return;
+      var g = isSteel(q.t) ? groups[f(q.t.id)] : [q];
+      g.forEach(function(x){ done[x.t.id] = 1; });
+      var tx = 0, ty = 0; g.forEach(function(x){ tx += x.t.x; ty += x.t.y; }); tx /= g.length; ty /= g.length;
+      rays.push({ p: q.p, tx: tx, ty: ty, ds: g.map(function(x){ return x.d; }), ids: g.map(function(x){ return x.e.id; }), tlabels: g.map(function(x){ return x.t.label; }), grp: g.length > 1 });
+    });
+  });
+  /* lines */
+  var lines = "";
+  rays.forEach(function(r){
+    var p = r.p, d = Math.hypot(r.tx - p.x, r.ty - p.y); if(d < 0.01) return; r.len = d;
+    var ux = (r.tx - p.x) / d, uy = (r.ty - p.y) / d, r0 = Math.min(0.55 * u, d / 3), r1 = Math.min((r.grp ? 0.8 : 0.62) * u, d / 3);
+    r.x1 = p.x + ux * r0; r.y1 = p.y + uy * r0; r.x2 = r.tx - ux * r1; r.y2 = r.ty - uy * r1; r.ang = Math.atan2(uy, ux);
+    lines += '<line class="sight' + (r.grp ? " sight-grp" : "") + '" data-eng="' + r.ids.join(" ") + '" x1="' + n2(r.x1) + '" y1="' + n2(-r.y1) + '" x2="' + n2(r.x2) + '" y2="' + n2(-r.y2) + '" stroke="' + C.sight + '" stroke-width="' + n2(u * (r.grp ? 0.06 : 0.045)) + '" stroke-dasharray="' + n2(u * 0.18) + ' ' + n2(u * 0.12) + '" marker-end="url(#arrSight)"/>';
+  });
+  rays = rays.filter(function(r){ return r.len; });
+  /* 2. tags: merge near-identical length + close angle from the same SP (non-group rays) */
+  var tags = [];
+  rays.forEach(function(r){
+    var txt0 = distRangeText(r.ds);
+    if(!r.grp){ var m = tags.filter(function(t){ return !t.grp && t.p === r.p && Math.abs(t.d - r.ds[0]) < 0.5 && Math.abs(Math.atan2(Math.sin(t.ang - r.ang), Math.cos(t.ang - r.ang))) < 0.26; })[0];
+      if(m){ m.rays.push(r); m.ds.push(r.ds[0]); return; } }
+    tags.push({ p: r.p, d: r.ds[0], ang: r.ang, grp: r.grp, rays: [r], ds: r.ds.slice(), txt: r.grp ? labelRanges(r.tlabels) + " · " + txt0 : null });
+  });
+  tags.forEach(function(t){ if(!t.txt) t.txt = distRangeText(t.ds); });
+  /* obstacles: item symbols and infrastructure */
+  var obs = [];
+  st.items.forEach(function(it){
+    if(it.type === "text") return;
+    if(isLine(it)){ var L = Math.hypot(it.x2 - it.x, it.y2 - it.y), hw = it.type === "backstop" ? 0.42 : it.type === "tyres" ? 0.32 : it.type === "concrete" ? 0.26 : u * 0.12, n = Math.max(1, Math.ceil(L / 0.3));
+      for(var k = 0; k <= n; k++){ var x = it.x + (it.x2 - it.x) * k / n, y = -(it.y + (it.y2 - it.y) * k / n); obs.push({ x0: x - hw, x1: x + hw, y0: y - hw, y1: y + hw }); } return; }
+    var h = isTarget(it) ? (isSteel(it) ? 0.3 : 0.48) : 0.42, w = isTarget(it) ? (isSteel(it) ? 0.3 : 0.36) : 0.42;
+    obs.push({ x0: it.x - w * u, x1: it.x + w * u, y0: -it.y - h * u, y1: -it.y + h * u, id: it.id });
+  });
+  var placed = [], out = "";
+  function free(b, self){ return !placed.some(function(q){ return boxHit(b, q); }) && !obs.some(function(q){ return q.id !== self && boxHit(b, q); }); }
+  /* 3a. target labels: preferred above (as in the editor), then around, then further out with a leader */
+  var tg = st.items.filter(function(i){ return isTarget(i) && i.label; });
+  tg.forEach(function(it){
+    var lp = labelPos(it, u), fs = u * 0.34, w = fs * 0.62 * it.label.length + u * 0.08, h = fs * 1.25, X = it.x, Y = -it.y;
+    var pref = [X, Y + lp.dy - fs * 0.3], cands = [pref];
+    [[0, 1], [1, 0], [-1, 0], [1, -1], [-1, -1], [1, 1], [-1, 1], [0, -1]].forEach(function(v){ cands.push([X + v[0] * (0.5 * u + w / 2), Y + (v[1] ? v[1] * (0.62 * u + h / 2) : 0)]); });
+    for(var rr = 1.3; rr <= 3.4; rr += 0.7) for(var a = 0; a < 16; a++){ var an = -Math.PI / 2 + a * Math.PI / 8; cands.push([X + Math.cos(an) * rr * u, Y + Math.sin(an) * rr * u]); }
+    var c = cands[0], b;
+    for(var i = 0; i < cands.length; i++){ b = { x0: cands[i][0] - w / 2, x1: cands[i][0] + w / 2, y0: cands[i][1] - h / 2, y1: cands[i][1] + h / 2 }; if(free(b, it.id)){ c = cands[i]; break; } if(i === cands.length - 1) b = { x0: c[0] - w / 2, x1: c[0] + w / 2, y0: c[1] - h / 2, y1: c[1] + h / 2 }; }
+    b = { x0: c[0] - w / 2, x1: c[0] + w / 2, y0: c[1] - h / 2, y1: c[1] + h / 2 }; placed.push(b);
+    var far = Math.hypot(c[0] - X, c[1] - Y) > 1.1 * u;
+    if(far) out += '<line class="leader" x1="' + n2(X) + '" y1="' + n2(Y) + '" x2="' + n2(c[0]) + '" y2="' + n2(c[1]) + '" stroke="#555" stroke-width="' + n2(u * 0.025) + '"/>';
+    out += '<text class="lbl plbl" data-for="' + it.id + '" data-box="' + [b.x0, b.y0, b.x1, b.y1].map(n2).join(",") + '" x="' + n2(c[0]) + '" y="' + n2(c[1] + fs * 0.3) + '" text-anchor="middle" font-size="' + n2(fs) + '" font-weight="800" fill="#111"' + (far ? ' paint-order="stroke" stroke="#fff" stroke-width="' + n2(u * 0.06) + '"' : "") + ' font-family="Barlow Condensed,Bahnschrift,Arial Narrow,sans-serif">' + esc(it.label) + '</text>';
+  });
+  /* 3b. distance tags: slide along the line, then step off it */
+  var tagsOut = "";
+  tags.forEach(function(t){
+    var w = u * (0.26 + 0.17 * t.txt.length), h = u * 0.4, cands = [];
+    var rs = t.rays, ax = 0, ay = 0, bx = 0, by = 0; rs.forEach(function(r){ ax += r.p.x; ay += r.p.y; bx += r.tx; by += r.ty; }); ax /= rs.length; ay /= rs.length; bx /= rs.length; by /= rs.length;
+    var L = Math.hypot(bx - ax, by - ay) || 1, nx = -(by - ay) / L, ny = (bx - ax) / L;
+    [0.55, 0.45, 0.65, 0.35, 0.72, 0.28, 0.8].forEach(function(f){ cands.push([ax + (bx - ax) * f, -(ay + (by - ay) * f)]); });
+    [0.55, 0.45, 0.65, 0.35].forEach(function(f){ [1, -1, 2, -2].forEach(function(s){ cands.push([ax + (bx - ax) * f + nx * s * 0.55 * u, -(ay + (by - ay) * f + ny * s * 0.55 * u)]); }); });
+    var c = null, b;
+    for(var i = 0; i < cands.length; i++){ b = { x0: cands[i][0] - w / 2, x1: cands[i][0] + w / 2, y0: cands[i][1] - h / 2, y1: cands[i][1] + h / 2 }; if(free(b)){ c = cands[i]; break; } }
+    if(!c){ c = cands[0]; b = { x0: c[0] - w / 2, x1: c[0] + w / 2, y0: c[1] - h / 2, y1: c[1] + h / 2 }; }
+    placed.push(b);
+    tagsOut += distLabel(c[0], c[1], t.txt, u, C.sight).replace('<g class="dlbl">', '<g class="dlbl" data-box="' + [b.x0, b.y0, b.x1, b.y1].map(n2).join(",") + '">');
+  });
+  return { lines: lines + tagsOut, labels: out };
 }
 /* ================= app state, storage, undo ================= */
 function $(id){ return document.getElementById(id); }
@@ -1450,7 +1585,7 @@ function deleteSelected(){
   });
   ui.sel = {}; render(); toast(ids.length + " item(s) deleted");
 }
-function rotateSelected(d){ var its = selectedItems(); if(!its.length) return; commit(function(){ its.forEach(function(i){ if(!isLine(i)) i.rot = (((i.rot || 0) + d) % 360 + 360) % 360; }); }); }
+function rotateSelected(d){ var its = selectedItems(); if(!its.length) return; commit(function(){ its.forEach(function(i){ if(isLine(i) && TYPES[i.type].infra){ var mx = (i.x + i.x2) / 2, my = (i.y + i.y2) / 2, a = -d * Math.PI / 180, c = Math.cos(a), s = Math.sin(a); [["x","y"],["x2","y2"]].forEach(function(k){ var dx = i[k[0]] - mx, dy = i[k[1]] - my; i[k[0]] = Math.round((mx + dx * c - dy * s) * 100) / 100; i[k[1]] = Math.round((my + dx * s + dy * c) * 100) / 100; }); return; } if(!isLine(i)) i.rot = (((i.rot || 0) + d) % 360 + 360) % 360; }); }); }
 function nudge(dx, dy){ var its = selectedItems(); if(!its.length) return; commit(function(){ its.forEach(function(i){ i.x = Math.round((i.x + dx) * 100) / 100; i.y = Math.round((i.y + dy) * 100) / 100; if(isLine(i)){ i.x2 = Math.round((i.x2 + dx) * 100) / 100; i.y2 = Math.round((i.y2 + dy) * 100) / 100; } }); }); }
 function copySel(){ var its = selectedItems(); if(!its.length) return false; ui.clip = JSON.parse(JSON.stringify(its)); toast(its.length + " item(s) copied"); return true; }
 function paste(){
@@ -1480,7 +1615,7 @@ function hint(){
 }
 function lastEng(st){ return st.engagements[st.engagements.length - 1]; }
 function addEngagement(st, posId, tgtId){
-  var last = lastEng(st), fa = last ? last.firearm : (st.firearms[0] || "handgun");
+  var last = lastEng(st), fa = last && st.firearms.indexOf(last.firearm) >= 0 ? last.firearm : (st.firearms[0] || (last ? last.firearm : "handgun"));
   var e = { id: uid(), pos: posId, target: tgtId, firearm: fa, rounds: defaultRoundsFor(byId(st)[tgtId], fa), note: "", ammo: "" };
   st.engagements.push(e); return e;
 }
@@ -1602,6 +1737,7 @@ function renderToolbar(){
   $("btnUndo").disabled = !undoStack.length; $("btnRedo").disabled = !redoStack.length;
 }
 function palIcon(t){
+      if(TYPES[t] && TYPES[t].infra) return infraIcon(t, "-0.6 -0.6 1.2 1.2");
       return t === "wall" ? '<svg viewBox="-0.6 -0.6 1.2 1.2"><line x1="-0.5" y1="0" x2="0.5" y2="0" stroke="' + C.wall + '" stroke-width="0.12"/><path d="M-0.6,-0.1 L-0.4,0.1 M-0.6,0.1 L-0.4,-0.1 M0.4,-0.1 L0.6,0.1 M0.4,0.1 L0.6,-0.1" stroke="' + C.wall + '" stroke-width="0.05"/></svg>'
         : t === "fault" ? '<svg viewBox="-0.6 -0.6 1.2 1.2"><line x1="-0.5" y1="0" x2="0.5" y2="0" stroke="#a0522d" stroke-width="0.09" stroke-dasharray="0.2 0.1"/></svg>'
         : t === "vtac" ? '<svg viewBox="-0.6 -0.6 1.2 1.2"><line x1="-0.55" y1="0" x2="0.55" y2="0" stroke="' + C.vtac + '" stroke-width="0.2"/><polyline points="-0.42,-0.06 -0.33,0.06 -0.24,-0.06" fill="none" stroke="#f2c14e" stroke-width="0.05"/><polyline points="-0.09,-0.06 0,0.06 0.09,-0.06" fill="none" stroke="#f2c14e" stroke-width="0.05"/><polyline points="0.24,-0.06 0.33,0.06 0.42,-0.06" fill="none" stroke="#f2c14e" stroke-width="0.05"/></svg>'
@@ -1770,6 +1906,7 @@ function renderProps(){
       '<div><label>V-ports</label><input type="number" step="1" min="1" max="9" data-p="ports" data-num value="' + it.ports + '"></div></div><label>Which positions shoot through which port (optional)</label><input data-p="portNote" value="' + esc(it.portNote || "") + '" placeholder="e.g. SP2: kneeling port, SP3: prone port">';
     if(it.type === "sp" || it.type === "cone"){ var vts = st.items.filter(function(x){ return x.type === "vtac"; });
       if(vts.length) h += '<div class="grid2"><div><label>Shoots through V-Tac</label><select data-p="vtac">' + opt("", "— no —", it.vtac || "") + vts.map(function(v){ return opt(v.id, v.label || "V-Tac", it.vtac || ""); }).join("") + '</select></div>' + (it.vtac ? '<div><label>Port</label><input data-p="vtacPort" value="' + esc(it.vtacPort || "") + '" placeholder="e.g. kneeling"></div>' : "") + '</div>'; }
+    if(isLine(it) && TYPES[it.type].infra){ h += '<div class="grid2"><div><label>Length (m)</label><input type="number" step="0.1" min="0.3" data-p="len" data-num value="' + n2(Math.hypot(it.x2 - it.x, it.y2 - it.y)) + '"></div></div><p class="small muted" style="margin:2px 0 0">' + (it.type === "backstop" ? "Berm / backstop for a 270° range. Rotate with R / the rotate buttons or drag the end handles." : "Fixed range infrastructure (not a portable prop). Rotate with R / the rotate buttons or drag the end handles.") + '</p>'; }
     if(isLine(it)){
       h += '<div class="grid2"><div><label>Start x (m)</label><input type="number" step="0.5" data-p="x" data-num value="' + it.x + '"></div><div><label>Start downrange (m)</label><input type="number" step="0.5" data-p="y" data-num value="' + it.y + '"></div>' +
         '<div><label>End x (m)</label><input type="number" step="0.5" data-p="x2" data-num value="' + it.x2 + '"></div><div><label>End downrange (m)</label><input type="number" step="0.5" data-p="y2" data-num value="' + it.y2 + '"></div></div><p class="small muted">Length ' + fmtM(Math.hypot(it.x2 - it.x, it.y2 - it.y)) + '</p>';
@@ -1917,7 +2054,9 @@ function onBriefChange(ev){
   }
   if(el.hasAttribute("data-fa")){
     var fa = el.getAttribute("data-fa");
-    commit(function(){ if(el.checked){ if(st.firearms.indexOf(fa) < 0) st.firearms.push(fa); st.firearms.sort(function(a, b){ return FA_ORDER.indexOf(a) - FA_ORDER.indexOf(b); }); } else st.firearms = st.firearms.filter(function(x){ return x !== fa; }); });
+    commit(function(){ if(el.checked){ if(st.firearms.indexOf(fa) < 0) st.firearms.push(fa); st.firearms.sort(function(a, b){ return FA_ORDER.indexOf(a) - FA_ORDER.indexOf(b); }); } else st.firearms = st.firearms.filter(function(x){ return x !== fa; });
+      /* shotgun-only stage: engagements left on an unticked firearm move to the shotgun at 1 round per target */
+      if(sgOnly(st)){ var tb = byId(st); st.engagements.forEach(function(e){ if(e.firearm !== "shotgun"){ e.firearm = "shotgun"; e.ammo = ""; e.rounds = defaultRoundsFor(tb[e.target], "shotgun"); } }); } });
     return;
   }
   if(el.hasAttribute("data-cls")){
@@ -2077,6 +2216,8 @@ function propsText(st){
     var tail = (v.portNote ? "; " + v.portNote : "") + (refs.length ? "; " + refs.join(", ") : "");
     parts.push("V-Tac barricade, " + fmtM(L) + " (" + extra.join(", ") + tail + ")");
   });
+  ["concrete","tyres","backstop"].forEach(function(t){ st.items.filter(function(i){ return i.type === t; }).forEach(function(v){
+    parts.push((t === "concrete" ? "Concrete wall (fixed)" : t === "tyres" ? "Tyre wall (fixed)" : "Backstop / berm (270° range)") + ", " + fmtM(Math.hypot(v.x2 - v.x, v.y2 - v.y)) + (v.label ? " (" + v.label + ")" : "")); }); });
   return parts.join("; ");
 }
 function nsText(st){ return noShoots(st).map(function(x){ return x.text; }).join("; "); }
@@ -2252,7 +2393,7 @@ function scoringStrip(st, diagPage){
   if(st.scoring !== "lr" && st.scoring !== "qs" || +st.parTime > 0) it.push(+st.parTime > 0 ? "Par Time " + st.parTime + " s" : "No Par Time");
   if(st.scoring === "negative" || st.scoring === "positive") it.push("Cover bonus: " + (st.cover ? "<b>yes</b>" : "no"));
   var ex = reqExceptions(st);
-  it.push("Hits: " + (st.limited ? "all engaged rounds scored" : "best 2, no cap on shots") + (ex.length ? "; <b>" + esc(ex.join(" · ")) + "</b>" : ""));
+  it.push("Hits: " + (sgOnly(st) ? "shotgun: 1 round per target" + (st.limited ? ", all scored" : "") : st.limited ? "all engaged rounds scored" : "best 2, no cap on shots") + (ex.length ? "; <b>" + esc(ex.join(" · ")) + "</b>" : ""));
   var sgs = sgSummary(st).filter(function(x){ return /buckshot/.test(x); }); if(sgs.length) it.push("Shotgun: <b>" + esc(sgs.join(" · ")) + "</b>");
   if(nsl.length) it.push("No-shoots: " + esc(nsl.map(function(x){ return x.stapled ? x.label + " " + NS_KIND[x.kind] : x.label; }).join(", ")) + (P.noshoot ? "" : " (penalty not briefed)"));
   if(st.qualStd) it.push("Qualification standard: <b>" + esc(st.qualStd) + "</b>");
@@ -2275,7 +2416,7 @@ function stageKey(st){
   var seen = {}, out = [];
   st.items.forEach(function(i){ var k = i.type === "noshoot" ? "noshoot" : i.type; if(seen[k] || i.type === "text") return; seen[k] = 1; out.push(i); });
   return '<div class="keygrid skey">' + out.map(function(i){ var o = i.type === "noshoot" ? { nsKind: i.nsKind, shape: i.shape } : (i.type === "cbarrel" ? { stack: i.stack } : {});
-    var lbl = isLine(i) ? TYPES[i.type].n : TYPES[i.type].n; var sym = isLine(i) ? '<svg viewBox="0 0 20 8"><line x1="1" y1="4" x2="19" y2="4" stroke="' + (i.type === "wall" ? C.wall : i.type === "vtac" ? C.vtac : "#a0522d") + '" stroke-width="' + (i.type === "vtac" ? 2.4 : 1.4) + '"' + (i.type === "fault" ? ' stroke-dasharray="2 1"' : "") + '/></svg>' : keySymbol(i.type, o);
+    var lbl = isLine(i) ? TYPES[i.type].n : TYPES[i.type].n; var sym = TYPES[i.type].infra ? infraIcon(i.type, "-0.6 -0.35 1.2 0.7") : isLine(i) ? '<svg viewBox="0 0 20 8"><line x1="1" y1="4" x2="19" y2="4" stroke="' + (i.type === "wall" ? C.wall : i.type === "vtac" ? C.vtac : "#a0522d") + '" stroke-width="' + (i.type === "vtac" ? 2.4 : 1.4) + '"' + (i.type === "fault" ? ' stroke-dasharray="2 1"' : "") + '/></svg>' : keySymbol(i.type, o);
     return "<div>" + sym + esc(lbl) + "</div>"; }).join("") +
     '<div><svg viewBox="0 0 20 8"><line x1="1" y1="4" x2="19" y2="4" stroke="' + C.sight + '" stroke-width=".7" stroke-dasharray="2 1.3"/></svg>Sight line, distance in metres</div>' + (st.path.length ? '<div><svg viewBox="0 0 20 8"><path d="M1,6 Q10,0 18,5" fill="none" stroke="' + C.move + '" stroke-width="1" stroke-dasharray="2 1.2"/></svg>Movement (in order)</div>' : "") + '</div>';
 }
