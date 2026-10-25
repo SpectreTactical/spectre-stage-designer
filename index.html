@@ -446,6 +446,10 @@ body.maxmap .maxbar{left:36px;top:36px}
   </div>
 </div>
 <script>
+// Copyright (c) 2009 Kazuhiko Arase
+// Licensed under the MIT license:
+//  http://www.opensource.org/licenses/mit-license.php
+var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],f={},c=function(t,r){o=function(t){for(var r=new Array(t),e=0;e<t;e+=1){r[e]=new Array(t);for(var n=0;n<t;n+=1)r[e][n]=null}return r}(i=4*e+17),l(0,0),l(i-7,0),l(0,i-7),s(),h(),d(t,r),e>=7&&v(t),null==a&&(a=p(e,n,u)),w(a,r)},l=function(t,r){for(var e=-1;e<=7;e+=1)if(!(t+e<=-1||i<=t+e))for(var n=-1;n<=7;n+=1)r+n<=-1||i<=r+n||(o[t+e][r+n]=0<=e&&e<=6&&(0==n||6==n)||0<=n&&n<=6&&(0==e||6==e)||2<=e&&e<=4&&2<=n&&n<=4)},h=function(){for(var t=8;t<i-8;t+=1)null==o[t][6]&&(o[t][6]=t%2==0);for(var r=8;r<i-8;r+=1)null==o[6][r]&&(o[6][r]=r%2==0)},s=function(){for(var t=B.getPatternPosition(e),r=0;r<t.length;r+=1)for(var n=0;n<t.length;n+=1){var i=t[r],a=t[n];if(null==o[i][a])for(var u=-2;u<=2;u+=1)for(var f=-2;f<=2;f+=1)o[i+u][a+f]=-2==u||2==u||-2==f||2==f||0==u&&0==f}},v=function(t){for(var r=B.getBCHTypeNumber(e),n=0;n<18;n+=1){var a=!t&&1==(r>>n&1);o[Math.floor(n/3)][n%3+i-8-3]=a}for(n=0;n<18;n+=1){a=!t&&1==(r>>n&1);o[n%3+i-8-3][Math.floor(n/3)]=a}},d=function(t,r){for(var e=n<<3|r,a=B.getBCHTypeInfo(e),u=0;u<15;u+=1){var f=!t&&1==(a>>u&1);u<6?o[u][8]=f:u<8?o[u+1][8]=f:o[i-15+u][8]=f}for(u=0;u<15;u+=1){f=!t&&1==(a>>u&1);u<8?o[8][i-u-1]=f:u<9?o[8][15-u-1+1]=f:o[8][15-u-1]=f}o[i-8][8]=!t},w=function(t,r){for(var e=-1,n=i-1,a=7,u=0,f=B.getMaskFunction(r),c=i-1;c>0;c-=2)for(6==c&&(c-=1);;){for(var g=0;g<2;g+=1)if(null==o[n][c-g]){var l=!1;u<t.length&&(l=1==(t[u]>>>a&1)),f(n,c-g)&&(l=!l),o[n][c-g]=l,-1==(a-=1)&&(u+=1,a=7)}if((n+=e)<0||i<=n){n-=e,e=-e;break}}},p=function(t,r,e){for(var n=A.getRSBlocks(t,r),o=b(),i=0;i<e.length;i+=1){var a=e[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var u=0;for(i=0;i<n.length;i+=1)u+=n[i].dataCount;if(o.getLengthInBits()>8*u)throw"code length overflow. ("+o.getLengthInBits()+">"+8*u+")";for(o.getLengthInBits()+4<=8*u&&o.put(0,4);o.getLengthInBits()%8!=0;)o.putBit(!1);for(;!(o.getLengthInBits()>=8*u||(o.put(236,8),o.getLengthInBits()>=8*u));)o.put(17,8);return function(t,r){for(var e=0,n=0,o=0,i=new Array(r.length),a=new Array(r.length),u=0;u<r.length;u+=1){var f=r[u].dataCount,c=r[u].totalCount-f;n=Math.max(n,f),o=Math.max(o,c),i[u]=new Array(f);for(var g=0;g<i[u].length;g+=1)i[u][g]=255&t.getBuffer()[g+e];e+=f;var l=B.getErrorCorrectPolynomial(c),h=k(i[u],l.getLength()-1).mod(l);for(a[u]=new Array(l.getLength()-1),g=0;g<a[u].length;g+=1){var s=g+h.getLength()-a[u].length;a[u][g]=s>=0?h.getAt(s):0}}var v=0;for(g=0;g<r.length;g+=1)v+=r[g].totalCount;var d=new Array(v),w=0;for(g=0;g<n;g+=1)for(u=0;u<r.length;u+=1)g<i[u].length&&(d[w]=i[u][g],w+=1);for(g=0;g<o;g+=1)for(u=0;u<r.length;u+=1)g<a[u].length&&(d[w]=a[u][g],w+=1);return d}(o,n)};f.addData=function(t,r){var e=null;switch(r=r||"Byte"){case"Numeric":e=M(t);break;case"Alphanumeric":e=x(t);break;case"Byte":e=m(t);break;case"Kanji":e=L(t);break;default:throw"mode:"+r}u.push(e),a=null},f.isDark=function(t,r){if(t<0||i<=t||r<0||i<=r)throw t+","+r;return o[t][r]},f.getModuleCount=function(){return i},f.make=function(){if(e<1){for(var t=1;t<40;t++){for(var r=A.getRSBlocks(t,n),o=b(),i=0;i<u.length;i++){var a=u[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var g=0;for(i=0;i<r.length;i++)g+=r[i].dataCount;if(o.getLengthInBits()<=8*g)break}e=t}c(!1,function(){for(var t=0,r=0,e=0;e<8;e+=1){c(!0,e);var n=B.getLostPoint(f);(0==e||t>n)&&(t=n,r=e)}return r}())},f.createTableTag=function(t,r){t=t||2;var e="";e+='<table style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: "+(r=void 0===r?4*t:r)+"px;",e+='">',e+="<tbody>";for(var n=0;n<f.getModuleCount();n+=1){e+="<tr>";for(var o=0;o<f.getModuleCount();o+=1)e+='<td style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: 0px;",e+=" width: "+t+"px;",e+=" height: "+t+"px;",e+=" background-color: ",e+=f.isDark(n,o)?"#000000":"#ffffff",e+=";",e+='"/>';e+="</tr>"}return e+="</tbody>",e+="</table>"},f.createSvgTag=function(t,r,e,n){var o={};"object"==typeof arguments[0]&&(t=(o=arguments[0]).cellSize,r=o.margin,e=o.alt,n=o.title),t=t||2,r=void 0===r?4*t:r,(e="string"==typeof e?{text:e}:e||{}).text=e.text||null,e.id=e.text?e.id||"qrcode-description":null,(n="string"==typeof n?{text:n}:n||{}).text=n.text||null,n.id=n.text?n.id||"qrcode-title":null;var i,a,u,c,g=f.getModuleCount()*t+2*r,l="";for(c="l"+t+",0 0,"+t+" -"+t+",0 0,-"+t+"z ",l+='<svg version="1.1" xmlns="http://www.w3.org/2000/svg"',l+=o.scalable?"":' width="'+g+'px" height="'+g+'px"',l+=' viewBox="0 0 '+g+" "+g+'" ',l+=' preserveAspectRatio="xMinYMin meet"',l+=n.text||e.text?' role="img" aria-labelledby="'+y([n.id,e.id].join(" ").trim())+'"':"",l+=">",l+=n.text?'<title id="'+y(n.id)+'">'+y(n.text)+"</title>":"",l+=e.text?'<description id="'+y(e.id)+'">'+y(e.text)+"</description>":"",l+='<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>',l+='<path d="',a=0;a<f.getModuleCount();a+=1)for(u=a*t+r,i=0;i<f.getModuleCount();i+=1)f.isDark(a,i)&&(l+="M"+(i*t+r)+","+u+c);return l+='" stroke="transparent" fill="black"/>',l+="</svg>"},f.createDataURL=function(t,r){t=t||2,r=void 0===r?4*t:r;var e=f.getModuleCount()*t+2*r,n=r,o=e-r;return I(e,e,function(r,e){if(n<=r&&r<o&&n<=e&&e<o){var i=Math.floor((r-n)/t),a=Math.floor((e-n)/t);return f.isDark(a,i)?0:1}return 1})},f.createImgTag=function(t,r,e){t=t||2,r=void 0===r?4*t:r;var n=f.getModuleCount()*t+2*r,o="";return o+="<img",o+=' src="',o+=f.createDataURL(t,r),o+='"',o+=' width="',o+=n,o+='"',o+=' height="',o+=n,o+='"',e&&(o+=' alt="',o+=y(e),o+='"'),o+="/>"};var y=function(t){for(var r="",e=0;e<t.length;e+=1){var n=t.charAt(e);switch(n){case"<":r+="&lt;";break;case">":r+="&gt;";break;case"&":r+="&amp;";break;case'"':r+="&quot;";break;default:r+=n}}return r};return f.createASCII=function(t,r){if((t=t||1)<2)return function(t){t=void 0===t?2:t;var r,e,n,o,i,a=1*f.getModuleCount()+2*t,u=t,c=a-t,g={"██":"█","█ ":"▀"," █":"▄","  ":" "},l={"██":"▀","█ ":"▀"," █":" ","  ":" "},h="";for(r=0;r<a;r+=2){for(n=Math.floor((r-u)/1),o=Math.floor((r+1-u)/1),e=0;e<a;e+=1)i="█",u<=e&&e<c&&u<=r&&r<c&&f.isDark(n,Math.floor((e-u)/1))&&(i=" "),u<=e&&e<c&&u<=r+1&&r+1<c&&f.isDark(o,Math.floor((e-u)/1))?i+=" ":i+="█",h+=t<1&&r+1>=c?l[i]:g[i];h+="\n"}return a%2&&t>0?h.substring(0,h.length-a-1)+Array(a+1).join("▀"):h.substring(0,h.length-1)}(r);t-=1,r=void 0===r?2*t:r;var e,n,o,i,a=f.getModuleCount()*t+2*r,u=r,c=a-r,g=Array(t+1).join("██"),l=Array(t+1).join("  "),h="",s="";for(e=0;e<a;e+=1){for(o=Math.floor((e-u)/t),s="",n=0;n<a;n+=1)i=1,u<=n&&n<c&&u<=e&&e<c&&f.isDark(o,Math.floor((n-u)/t))&&(i=0),s+=i?g:l;for(o=0;o<t;o+=1)h+=s+"\n"}return h.substring(0,h.length-1)},f.renderTo2dContext=function(t,r){r=r||2;for(var e=f.getModuleCount(),n=0;n<e;n++)for(var o=0;o<e;o++)t.fillStyle=f.isDark(n,o)?"black":"white",t.fillRect(o*r,n*r,r,r)},f};t.stringToBytes=(t.stringToBytesFuncs={default:function(t){for(var r=[],e=0;e<t.length;e+=1){var n=t.charCodeAt(e);r.push(255&n)}return r}}).default,t.createStringToBytes=function(t,r){var e=function(){for(var e=S(t),n=function(){var t=e.read();if(-1==t)throw"eof";return t},o=0,i={};;){var a=e.read();if(-1==a)break;var u=n(),f=n()<<8|n();i[String.fromCharCode(a<<8|u)]=f,o+=1}if(o!=r)throw o+" != "+r;return i}(),n="?".charCodeAt(0);return function(t){for(var r=[],o=0;o<t.length;o+=1){var i=t.charCodeAt(o);if(i<128)r.push(i);else{var a=e[t.charAt(o)];"number"==typeof a?(255&a)==a?r.push(a):(r.push(a>>>8),r.push(255&a)):r.push(n)}}return r}};var r,e,n,o,i,a=1,u=2,f=4,c=8,g={L:1,M:0,Q:3,H:2},l=0,h=1,s=2,v=3,d=4,w=5,p=6,y=7,B=(r=[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]],e=1335,n=7973,i=function(t){for(var r=0;0!=t;)r+=1,t>>>=1;return r},(o={}).getBCHTypeInfo=function(t){for(var r=t<<10;i(r)-i(e)>=0;)r^=e<<i(r)-i(e);return 21522^(t<<10|r)},o.getBCHTypeNumber=function(t){for(var r=t<<12;i(r)-i(n)>=0;)r^=n<<i(r)-i(n);return t<<12|r},o.getPatternPosition=function(t){return r[t-1]},o.getMaskFunction=function(t){switch(t){case l:return function(t,r){return(t+r)%2==0};case h:return function(t,r){return t%2==0};case s:return function(t,r){return r%3==0};case v:return function(t,r){return(t+r)%3==0};case d:return function(t,r){return(Math.floor(t/2)+Math.floor(r/3))%2==0};case w:return function(t,r){return t*r%2+t*r%3==0};case p:return function(t,r){return(t*r%2+t*r%3)%2==0};case y:return function(t,r){return(t*r%3+(t+r)%2)%2==0};default:throw"bad maskPattern:"+t}},o.getErrorCorrectPolynomial=function(t){for(var r=k([1],0),e=0;e<t;e+=1)r=r.multiply(k([1,C.gexp(e)],0));return r},o.getLengthInBits=function(t,r){if(1<=r&&r<10)switch(t){case a:return 10;case u:return 9;case f:case c:return 8;default:throw"mode:"+t}else if(r<27)switch(t){case a:return 12;case u:return 11;case f:return 16;case c:return 10;default:throw"mode:"+t}else{if(!(r<41))throw"type:"+r;switch(t){case a:return 14;case u:return 13;case f:return 16;case c:return 12;default:throw"mode:"+t}}},o.getLostPoint=function(t){for(var r=t.getModuleCount(),e=0,n=0;n<r;n+=1)for(var o=0;o<r;o+=1){for(var i=0,a=t.isDark(n,o),u=-1;u<=1;u+=1)if(!(n+u<0||r<=n+u))for(var f=-1;f<=1;f+=1)o+f<0||r<=o+f||0==u&&0==f||a==t.isDark(n+u,o+f)&&(i+=1);i>5&&(e+=3+i-5)}for(n=0;n<r-1;n+=1)for(o=0;o<r-1;o+=1){var c=0;t.isDark(n,o)&&(c+=1),t.isDark(n+1,o)&&(c+=1),t.isDark(n,o+1)&&(c+=1),t.isDark(n+1,o+1)&&(c+=1),0!=c&&4!=c||(e+=3)}for(n=0;n<r;n+=1)for(o=0;o<r-6;o+=1)t.isDark(n,o)&&!t.isDark(n,o+1)&&t.isDark(n,o+2)&&t.isDark(n,o+3)&&t.isDark(n,o+4)&&!t.isDark(n,o+5)&&t.isDark(n,o+6)&&(e+=40);for(o=0;o<r;o+=1)for(n=0;n<r-6;n+=1)t.isDark(n,o)&&!t.isDark(n+1,o)&&t.isDark(n+2,o)&&t.isDark(n+3,o)&&t.isDark(n+4,o)&&!t.isDark(n+5,o)&&t.isDark(n+6,o)&&(e+=40);var g=0;for(o=0;o<r;o+=1)for(n=0;n<r;n+=1)t.isDark(n,o)&&(g+=1);return e+=Math.abs(100*g/r/r-50)/5*10},o),C=function(){for(var t=new Array(256),r=new Array(256),e=0;e<8;e+=1)t[e]=1<<e;for(e=8;e<256;e+=1)t[e]=t[e-4]^t[e-5]^t[e-6]^t[e-8];for(e=0;e<255;e+=1)r[t[e]]=e;var n={glog:function(t){if(t<1)throw"glog("+t+")";return r[t]},gexp:function(r){for(;r<0;)r+=255;for(;r>=256;)r-=255;return t[r]}};return n}();function k(t,r){if(void 0===t.length)throw t.length+"/"+r;var e=function(){for(var e=0;e<t.length&&0==t[e];)e+=1;for(var n=new Array(t.length-e+r),o=0;o<t.length-e;o+=1)n[o]=t[o+e];return n}(),n={getAt:function(t){return e[t]},getLength:function(){return e.length},multiply:function(t){for(var r=new Array(n.getLength()+t.getLength()-1),e=0;e<n.getLength();e+=1)for(var o=0;o<t.getLength();o+=1)r[e+o]^=C.gexp(C.glog(n.getAt(e))+C.glog(t.getAt(o)));return k(r,0)},mod:function(t){if(n.getLength()-t.getLength()<0)return n;for(var r=C.glog(n.getAt(0))-C.glog(t.getAt(0)),e=new Array(n.getLength()),o=0;o<n.getLength();o+=1)e[o]=n.getAt(o);for(o=0;o<t.getLength();o+=1)e[o]^=C.gexp(C.glog(t.getAt(o))+r);return k(e,0).mod(t)}};return n}var A=function(){var t=[[1,26,19],[1,26,16],[1,26,13],[1,26,9],[1,44,34],[1,44,28],[1,44,22],[1,44,16],[1,70,55],[1,70,44],[2,35,17],[2,35,13],[1,100,80],[2,50,32],[2,50,24],[4,25,9],[1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],[2,86,68],[4,43,27],[4,43,19],[4,43,15],[2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],[2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],[2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],[2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16],[4,101,81],[1,80,50,4,81,51],[4,50,22,4,51,23],[3,36,12,8,37,13],[2,116,92,2,117,93],[6,58,36,2,59,37],[4,46,20,6,47,21],[7,42,14,4,43,15],[4,133,107],[8,59,37,1,60,38],[8,44,20,4,45,21],[12,33,11,4,34,12],[3,145,115,1,146,116],[4,64,40,5,65,41],[11,36,16,5,37,17],[11,36,12,5,37,13],[5,109,87,1,110,88],[5,65,41,5,66,42],[5,54,24,7,55,25],[11,36,12,7,37,13],[5,122,98,1,123,99],[7,73,45,3,74,46],[15,43,19,2,44,20],[3,45,15,13,46,16],[1,135,107,5,136,108],[10,74,46,1,75,47],[1,50,22,15,51,23],[2,42,14,17,43,15],[5,150,120,1,151,121],[9,69,43,4,70,44],[17,50,22,1,51,23],[2,42,14,19,43,15],[3,141,113,4,142,114],[3,70,44,11,71,45],[17,47,21,4,48,22],[9,39,13,16,40,14],[3,135,107,5,136,108],[3,67,41,13,68,42],[15,54,24,5,55,25],[15,43,15,10,44,16],[4,144,116,4,145,117],[17,68,42],[17,50,22,6,51,23],[19,46,16,6,47,17],[2,139,111,7,140,112],[17,74,46],[7,54,24,16,55,25],[34,37,13],[4,151,121,5,152,122],[4,75,47,14,76,48],[11,54,24,14,55,25],[16,45,15,14,46,16],[6,147,117,4,148,118],[6,73,45,14,74,46],[11,54,24,16,55,25],[30,46,16,2,47,17],[8,132,106,4,133,107],[8,75,47,13,76,48],[7,54,24,22,55,25],[22,45,15,13,46,16],[10,142,114,2,143,115],[19,74,46,4,75,47],[28,50,22,6,51,23],[33,46,16,4,47,17],[8,152,122,4,153,123],[22,73,45,3,74,46],[8,53,23,26,54,24],[12,45,15,28,46,16],[3,147,117,10,148,118],[3,73,45,23,74,46],[4,54,24,31,55,25],[11,45,15,31,46,16],[7,146,116,7,147,117],[21,73,45,7,74,46],[1,53,23,37,54,24],[19,45,15,26,46,16],[5,145,115,10,146,116],[19,75,47,10,76,48],[15,54,24,25,55,25],[23,45,15,25,46,16],[13,145,115,3,146,116],[2,74,46,29,75,47],[42,54,24,1,55,25],[23,45,15,28,46,16],[17,145,115],[10,74,46,23,75,47],[10,54,24,35,55,25],[19,45,15,35,46,16],[17,145,115,1,146,116],[14,74,46,21,75,47],[29,54,24,19,55,25],[11,45,15,46,46,16],[13,145,115,6,146,116],[14,74,46,23,75,47],[44,54,24,7,55,25],[59,46,16,1,47,17],[12,151,121,7,152,122],[12,75,47,26,76,48],[39,54,24,14,55,25],[22,45,15,41,46,16],[6,151,121,14,152,122],[6,75,47,34,76,48],[46,54,24,10,55,25],[2,45,15,64,46,16],[17,152,122,4,153,123],[29,74,46,14,75,47],[49,54,24,10,55,25],[24,45,15,46,46,16],[4,152,122,18,153,123],[13,74,46,32,75,47],[48,54,24,14,55,25],[42,45,15,32,46,16],[20,147,117,4,148,118],[40,75,47,7,76,48],[43,54,24,22,55,25],[10,45,15,67,46,16],[19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]],r=function(t,r){var e={};return e.totalCount=t,e.dataCount=r,e},e={};return e.getRSBlocks=function(e,n){var o=function(r,e){switch(e){case g.L:return t[4*(r-1)+0];case g.M:return t[4*(r-1)+1];case g.Q:return t[4*(r-1)+2];case g.H:return t[4*(r-1)+3];default:return}}(e,n);if(void 0===o)throw"bad rs block @ typeNumber:"+e+"/errorCorrectionLevel:"+n;for(var i=o.length/3,a=[],u=0;u<i;u+=1)for(var f=o[3*u+0],c=o[3*u+1],l=o[3*u+2],h=0;h<f;h+=1)a.push(r(c,l));return a},e}(),b=function(){var t=[],r=0,e={getBuffer:function(){return t},getAt:function(r){var e=Math.floor(r/8);return 1==(t[e]>>>7-r%8&1)},put:function(t,r){for(var n=0;n<r;n+=1)e.putBit(1==(t>>>r-n-1&1))},getLengthInBits:function(){return r},putBit:function(e){var n=Math.floor(r/8);t.length<=n&&t.push(0),e&&(t[n]|=128>>>r%8),r+=1}};return e},M=function(t){var r=a,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+2<r.length;)t.put(o(r.substring(n,n+3)),10),n+=3;n<r.length&&(r.length-n==1?t.put(o(r.substring(n,n+1)),4):r.length-n==2&&t.put(o(r.substring(n,n+2)),7))}},o=function(t){for(var r=0,e=0;e<t.length;e+=1)r=10*r+i(t.charAt(e));return r},i=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);throw"illegal char :"+t};return n},x=function(t){var r=u,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+1<r.length;)t.put(45*o(r.charAt(n))+o(r.charAt(n+1)),11),n+=2;n<r.length&&t.put(o(r.charAt(n)),6)}},o=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);if("A"<=t&&t<="Z")return t.charCodeAt(0)-"A".charCodeAt(0)+10;switch(t){case" ":return 36;case"$":return 37;case"%":return 38;case"*":return 39;case"+":return 40;case"-":return 41;case".":return 42;case"/":return 43;case":":return 44;default:throw"illegal char :"+t}};return n},m=function(r){var e=f,n=t.stringToBytes(r),o={getMode:function(){return e},getLength:function(t){return n.length},write:function(t){for(var r=0;r<n.length;r+=1)t.put(n[r],8)}};return o},L=function(r){var e=c,n=t.stringToBytesFuncs.SJIS;if(!n)throw"sjis not supported.";!function(){var t=n("友");if(2!=t.length||38726!=(t[0]<<8|t[1]))throw"sjis not supported."}();var o=n(r),i={getMode:function(){return e},getLength:function(t){return~~(o.length/2)},write:function(t){for(var r=o,e=0;e+1<r.length;){var n=(255&r[e])<<8|255&r[e+1];if(33088<=n&&n<=40956)n-=33088;else{if(!(57408<=n&&n<=60351))throw"illegal char at "+(e+1)+"/"+n;n-=49472}n=192*(n>>>8&255)+(255&n),t.put(n,13),e+=2}if(e<r.length)throw"illegal char at "+(e+1)}};return i},D=function(){var t=[],r={writeByte:function(r){t.push(255&r)},writeShort:function(t){r.writeByte(t),r.writeByte(t>>>8)},writeBytes:function(t,e,n){e=e||0,n=n||t.length;for(var o=0;o<n;o+=1)r.writeByte(t[o+e])},writeString:function(t){for(var e=0;e<t.length;e+=1)r.writeByte(t.charCodeAt(e))},toByteArray:function(){return t},toString:function(){var r="";r+="[";for(var e=0;e<t.length;e+=1)e>0&&(r+=","),r+=t[e];return r+="]"}};return r},S=function(t){var r=t,e=0,n=0,o=0,i={read:function(){for(;o<8;){if(e>=r.length){if(0==o)return-1;throw"unexpected end of file./"+o}var t=r.charAt(e);if(e+=1,"="==t)return o=0,-1;t.match(/^\s$/)||(n=n<<6|a(t.charCodeAt(0)),o+=6)}var i=n>>>o-8&255;return o-=8,i}},a=function(t){if(65<=t&&t<=90)return t-65;if(97<=t&&t<=122)return t-97+26;if(48<=t&&t<=57)return t-48+52;if(43==t)return 62;if(47==t)return 63;throw"c:"+t};return i},I=function(t,r,e){for(var n=function(t,r){var e=t,n=r,o=new Array(t*r),i={setPixel:function(t,r,n){o[r*e+t]=n},write:function(t){t.writeString("GIF87a"),t.writeShort(e),t.writeShort(n),t.writeByte(128),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(255),t.writeByte(255),t.writeByte(255),t.writeString(","),t.writeShort(0),t.writeShort(0),t.writeShort(e),t.writeShort(n),t.writeByte(0);var r=a(2);t.writeByte(2);for(var o=0;r.length-o>255;)t.writeByte(255),t.writeBytes(r,o,255),o+=255;t.writeByte(r.length-o),t.writeBytes(r,o,r.length-o),t.writeByte(0),t.writeString(";")}},a=function(t){for(var r=1<<t,e=1+(1<<t),n=t+1,i=u(),a=0;a<r;a+=1)i.add(String.fromCharCode(a));i.add(String.fromCharCode(r)),i.add(String.fromCharCode(e));var f,c,g,l=D(),h=(f=l,c=0,g=0,{write:function(t,r){if(t>>>r!=0)throw"length over";for(;c+r>=8;)f.writeByte(255&(t<<c|g)),r-=8-c,t>>>=8-c,g=0,c=0;g|=t<<c,c+=r},flush:function(){c>0&&f.writeByte(g)}});h.write(r,n);var s=0,v=String.fromCharCode(o[s]);for(s+=1;s<o.length;){var d=String.fromCharCode(o[s]);s+=1,i.contains(v+d)?v+=d:(h.write(i.indexOf(v),n),i.size()<4095&&(i.size()==1<<n&&(n+=1),i.add(v+d)),v=d)}return h.write(i.indexOf(v),n),h.write(e,n),h.flush(),l.toByteArray()},u=function(){var t={},r=0,e={add:function(n){if(e.contains(n))throw"dup key:"+n;t[n]=r,r+=1},size:function(){return r},indexOf:function(r){return t[r]},contains:function(r){return void 0!==t[r]}};return e};return i}(t,r),o=0;o<r;o+=1)for(var i=0;i<t;i+=1)n.setPixel(i,o,e(i,o));var a=D();n.write(a);for(var u=function(){var t=0,r=0,e=0,n="",o={},i=function(t){n+=String.fromCharCode(a(63&t))},a=function(t){if(t<0);else{if(t<26)return 65+t;if(t<52)return t-26+97;if(t<62)return t-52+48;if(62==t)return 43;if(63==t)return 47}throw"n:"+t};return o.writeByte=function(n){for(t=t<<8|255&n,r+=8,e+=1;r>=6;)i(t>>>r-6),r-=6},o.flush=function(){if(r>0&&(i(t<<6-r),t=0,r=0),e%3!=0)for(var o=3-e%3,a=0;a<o;a+=1)n+="="},o.toString=function(){return n},o}(),f=a.toByteArray(),c=0;c<f.length;c+=1)u.writeByte(f[c]);return u.flush(),"data:image/gif;base64,"+u};return t}();qrcode.stringToBytesFuncs["UTF-8"]=function(t){return function(t){for(var r=[],e=0;e<t.length;e++){var n=t.charCodeAt(e);n<128?r.push(n):n<2048?r.push(192|n>>6,128|63&n):n<55296||n>=57344?r.push(224|n>>12,128|n>>6&63,128|63&n):(e++,n=65536+((1023&n)<<10|1023&t.charCodeAt(e)),r.push(240|n>>18,128|n>>12&63,128|n>>6&63,128|63&n))}return r}(t)},function(t){"function"==typeof define&&define.amd?define([],t):"object"==typeof exports&&(module.exports=t())}(function(){return qrcode});
 "use strict";
 /* ================= Spectre Stage Designer – Version 1.0 =================
    Rules: Spectre Tactical Shooting – Rules, Classes and Divisions, 2nd Edition (2026).
@@ -2811,6 +2815,329 @@ function init(){
     setTool: setTool, fitView: fitView, exampleMatch: exampleMatch, cur: cur, undo: undo, redo: redo, stageClasses: stageClasses, mentions: mentions, labelRanges: labelRanges, renderPages: renderPages, view: view, normalizeStage: normalizeStage, METHODS: METHODS, newStage: newStage, uid: uid, defaultSettings: defaultSettings, TYPES: TYPES, KEY: KEY, undoDepth: function(){ return undoStack.length; }, reqOf: reqOf, noShoots: noShoots, stageRanking: stageRanking, angleFromDownrange: angleFromDownrange, normalizeState: normalizeState, eligibleText: eligibleText, ZOOM_STEP: ZOOM_STEP, syncReqRounds: syncReqRounds, applyFix: applyFix, ZOOM_FINE: ZOOM_FINE, setMax: setMax, toggleCol: toggleCol, panStep: panStep, svgSize: svgSize, qualSuggested: qualSuggested, isQual: isQual };
 }
 document.addEventListener("DOMContentLoaded", init);
+/* ================= Stage library (saved in this browser), prop & target list, bay templates, QR export =================
+   Everything here is stored only in this browser (localStorage). No personal details (names of shooters, ID or cell numbers) are stored. */
+var LIB_KEY = "spectreStageDesigner.library", BAY_KEY = "spectreStageDesigner.bays";
+var BAY_FEATURE_TYPES = ["concrete", "tyres", "backstop", "fault", "wall"];
+
+/* ---- stage.bay survives normalizeStage (the shared data model in a-data.js is left unchanged for the scoring app) ---- */
+function cleanBay(b){
+  if(!b || typeof b !== "object") return null;
+  var w = +b.w, d = +b.d; if(!(w > 0) || !(d > 0)) return null;
+  return { name: String(b.name || "Bay").slice(0, 60), w: w, d: d, x0: isFinite(+b.x0) && b.x0 !== null ? +b.x0 : -w / 2, y0: isFinite(+b.y0) && b.y0 !== null ? +b.y0 : -2 };
+}
+var _normalizeStageBase = normalizeStage;
+normalizeStage = function(s){ var o = _normalizeStageBase(s); var bf = {}; ((s && s.items) || []).forEach(function(i){ if(i && i.bayFeat && i.id) bf[i.id] = 1; }); o.items.forEach(function(i){ if(bf[i.id]) i.bayFeat = 1; }); var b = cleanBay(s && s.bay); if(b) o.bay = b; else delete o.bay; return o; };
+
+/* ---- bay outline on the map and in the print diagram ---- */
+function bayOutlineSVG(st, u, print){
+  var b = st.bay; if(!b) return "";
+  var x = b.x0, y = -(b.y0 + b.d), sw = u * (print ? 0.05 : 0.07);
+  return '<g class="bayoutline" pointer-events="none"><rect x="' + n2(x) + '" y="' + n2(y) + '" width="' + n2(b.w) + '" height="' + n2(b.d) + '" fill="' + (print ? "none" : "rgba(201,151,31,.05)") + '" stroke="#c9971f" stroke-width="' + n2(sw) + '" stroke-dasharray="' + n2(u * 0.4) + ' ' + n2(u * 0.2) + '"/>' +
+    '<text x="' + n2(x + u * 0.3) + '" y="' + n2(y - u * 0.3) + '" font-size="' + n2(u * 0.55) + '" font-weight="700" fill="#8a6514">' + esc(b.name + " · " + fmtM(b.w) + " × " + fmtM(b.d)) + '</text></g>';
+}
+var _sceneSVGBase = sceneSVG;
+sceneSVG = function(st, u, o){ return bayOutlineSVG(st, u, o && o.print) + _sceneSVGBase(st, u, o); };
+
+function itemsOutsideBay(st){
+  var b = st.bay; if(!b) return [];
+  var e = 0.05, inb = function(x, y){ return x >= b.x0 - e && x <= b.x0 + b.w + e && y >= b.y0 - e && y <= b.y0 + b.d + e; };
+  return st.items.filter(function(i){ if(TYPES[i.type].infra) return false; return !inb(i.x, i.y) || (isLine(i) && !inb(i.x2, i.y2)); });
+}
+var _runChecksBase = runChecks;
+runChecks = function(st, S){
+  var out = _runChecksBase(st, S), off = itemsOutsideBay(st);
+  if(off.length) out.push({ level: "warn", code: "BAY_FIT", msg: off.length + " item" + (off.length === 1 ? " is" : "s are") + " outside " + st.bay.name + " (" + fmtM(st.bay.w) + " × " + fmtM(st.bay.d) + "): " + off.slice(0, 6).map(function(i){ return i.label || TYPES[i.type].n; }).join(", ") + (off.length > 6 ? "…" : "") + ".", ref: "Bay template (Stages → Bay…)", ids: off.map(function(i){ return i.id; }) });
+  return out;
+};
+
+/* ---- small storage helpers ---- */
+function lsGet(k, def){ try{ var v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? def : v; }catch(e){ return def; } }
+function lsSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ alert("Could not save in this browser (storage full or blocked)."); return false; } }
+function dlgOpen(id, title, inner){
+  var d = $(id);
+  if(!d){ d = document.createElement("div"); d.id = id; d.className = "dlg xdlg"; d.setAttribute("role", "dialog"); d.setAttribute("aria-modal", "true"); document.body.appendChild(d);
+    d.addEventListener("keydown", function(ev){ if(ev.key === "Escape"){ ev.stopPropagation(); ev.preventDefault(); dlgClose(id); } }, true); }
+  d.innerHTML = '<div class="dlgbox"><h3>' + esc(title) + '</h3>' + inner + '</div>'; d.hidden = false; return d;
+}
+function dlgClose(id){ var d = $(id); if(d){ d.hidden = true; d.innerHTML = ""; } if(id === "qrDlg") qrStop(); }
+function anyDlgOpen(){ return !!document.querySelector(".dlg:not([hidden])"); }
+
+/* ================= 1. Stage library ================= */
+function libLoad(){ var l = lsGet(LIB_KEY, []); return Array.isArray(l) ? l : []; }
+function libSave(l){ return lsSet(LIB_KEY, l); }
+function parseTags(s){ var seen = {}; return String(s || "").split(/[,;]/).map(function(t){ return t.trim(); }).filter(function(t){ var k = t.toLowerCase(); if(!t || seen[k]) return false; seen[k] = 1; return true; }).slice(0, 20); }
+function libLastUsed(e){ return (e.used || []).concat(e.from && e.from.date ? [e.from.date] : []).filter(Boolean).sort().pop() || ""; }
+function libSaveStage(st, tags, note){
+  var l = libLoad(), copy = JSON.parse(JSON.stringify(st));
+  var e = { id: uid(), title: st.title || "Untitled", subtitle: st.subtitle || "", tags: tags || [], note: note || "", savedAt: new Date().toISOString(),
+    from: { match: state.match.name || "", date: state.match.date || "", venue: state.match.venue || "", stageNo: stageNo(st) }, used: state.match.date ? [state.match.date] : [], stage: copy };
+  l.unshift(e); return libSave(l) ? e : null;
+}
+function libSaveCurrent(){
+  var st = cur(), sug = [st.division].concat(st.firearms.map(FN)).join(", ");
+  var t = prompt("Save stage " + stageNo(st) + " “" + st.title + "” to the stage library.\nTags (comma separated), e.g. " + sug + ", steel, 270°:", sug);
+  if(t === null) return;
+  var e = libSaveStage(st, parseTags(t)); if(e) toast("Saved to library: " + e.title);
+}
+function libMatchSearch(e, q){
+  if(!q) return true;
+  var hay = [e.title, e.subtitle, e.note, (e.tags || []).join(" "), e.from && e.from.match, e.from && e.from.date, libLastUsed(e), e.stage && e.stage.division, e.stage && (e.stage.firearms || []).join(" ")].join(" ").toLowerCase();
+  return q.toLowerCase().split(/\s+/).filter(Boolean).every(function(w){ return hay.indexOf(w) >= 0; });
+}
+var libQ = "", libSort = "lastUsed";
+function openLibrary(){
+  dlgOpen("slDlg", "Stage library", '<p class="small muted">Stages saved in this browser. Search by title, tag, match, date, division or firearm. <b>Add to match</b> adds a fresh copy after your current stages (one undo step) and records today’s match date as “used”. Use <b>Export library</b> for a backup or to move it to another computer.</p>' +
+    '<div class="btnrow"><input id="slQ" placeholder="Search… e.g. steel 2026-10 shotgun" style="flex:1;min-width:200px" value="' + esc(libQ) + '"><select id="slSort"><option value="lastUsed">Last used (oldest first)</option><option value="lastUsedDesc">Last used (newest first)</option><option value="title">Title</option><option value="saved">Recently saved</option></select></div>' +
+    '<div class="btnrow"><button id="slSaveCur" class="primary">Save current stage…</button><button id="slSaveAll">Save all stages of this match</button><button id="slExport">Export library</button><button id="slImport">Import library / stage file…</button><input type="file" id="slFile" accept=".json,application/json" hidden></div>' +
+    '<div id="slList" style="overflow:auto;margin:6px 0;border:1px solid #dde2ea;border-radius:6px;min-height:120px"></div>' +
+    '<div class="btnrow dlgfoot"><button id="slClose">Close</button></div>');
+  $("slSort").value = libSort; libRender();
+  $("slQ").addEventListener("input", function(){ libQ = this.value; libRender(); });
+  $("slSort").addEventListener("change", function(){ libSort = this.value; libRender(); });
+  $("slClose").onclick = function(){ dlgClose("slDlg"); };
+  $("slSaveCur").onclick = function(){ libSaveCurrent(); libRender(); };
+  $("slSaveAll").onclick = function(){ var t = prompt("Save all " + state.stages.length + " stages of “" + state.match.name + "” (" + state.match.date + ").\nTags for all of them (comma separated):", ""); if(t === null) return; state.stages.forEach(function(s){ libSaveStage(s, parseTags(t)); }); toast("Saved " + state.stages.length + " stages"); libRender(); };
+  $("slExport").onclick = function(){ download("spectre-stage-library-" + todayISO() + ".json", JSON.stringify({ app: APP_ID, kind: "library", version: SCHEMA, exportedAt: new Date().toISOString(), entries: libLoad() }, null, 1), "application/json"); toast("Library exported"); };
+  $("slImport").onclick = function(){ $("slFile").click(); };
+  $("slFile").onchange = function(){ var f = this.files && this.files[0], inp = this; if(!f) return; var rd = new FileReader(); rd.onload = function(){ inp.value = ""; libImportText(String(rd.result || ""), f.name); libRender(); }; rd.readAsText(f); };
+  $("slList").addEventListener("click", libListClick);
+  $("slQ").focus();
+}
+function libImportText(txt, name){
+  var raw; try{ raw = JSON.parse(txt); }catch(e){ alert("Could not read " + name + ": not valid JSON. Nothing was changed."); return 0; }
+  var l = libLoad(), have = {}, n = 0; l.forEach(function(e){ have[e.id] = 1; });
+  if(raw && raw.kind === "library" && Array.isArray(raw.entries)){
+    raw.entries.forEach(function(e){ if(!e || !e.stage || have[e.id]) return; try{ e.stage = normalizeState({ version: raw.version, match: { name: "" }, stages: [e.stage] }).stages[0]; }catch(_){ return; } e.tags = Array.isArray(e.tags) ? e.tags.map(String) : []; e.used = Array.isArray(e.used) ? e.used.map(String) : []; l.push(e); n++; });
+  } else {
+    var f; try{ f = readStagesFile(txt); }catch(e){ alert("Could not read " + name + ": " + e.message + " Nothing was changed."); return 0; }
+    var date = (raw.match && raw.match.date) || (raw.from && raw.from.date) || "";
+    f.stages.forEach(function(s, i){ l.push({ id: uid(), title: s.title || "Untitled", subtitle: s.subtitle || "", tags: [], note: "", savedAt: new Date().toISOString(), from: { match: f.name || "", date: date, venue: (raw.match && raw.match.venue) || "", stageNo: i + 1 }, used: date ? [date] : [], stage: s }); n++; });
+  }
+  libSave(l); toast(n + " stage" + (n === 1 ? "" : "s") + " added to the library from " + name); return n;
+}
+function libRender(){
+  var box = $("slList"); if(!box) return;
+  var l = libLoad().filter(function(e){ return libMatchSearch(e, libQ); });
+  var cmp = { lastUsed: function(a, b){ return libLastUsed(a).localeCompare(libLastUsed(b)); }, lastUsedDesc: function(a, b){ return libLastUsed(b).localeCompare(libLastUsed(a)); }, title: function(a, b){ return a.title.localeCompare(b.title); }, saved: function(a, b){ return String(b.savedAt).localeCompare(String(a.savedAt)); } }[libSort];
+  l.sort(cmp);
+  var total = libLoad().length;
+  if(!l.length){ box.innerHTML = '<p class="muted" style="padding:10px">' + (total ? "No stages match “" + esc(libQ) + "”." : "The library is empty. Save the current stage, or import older match files (they are only read).") + '</p>'; return; }
+  var yr = new Date().getFullYear() + "";
+  box.innerHTML = '<table class="eng" style="width:100%"><thead><tr><th>Stage</th><th>Tags</th><th>From match</th><th>Last used</th><th>Rds</th><th></th></tr></thead><tbody>' + l.map(function(e){
+    var s = e.stage, tot = stageTotal(s), lu = libLastUsed(e), recent = lu && lu.slice(0, 4) === yr;
+    return '<tr data-lid="' + esc(e.id) + '"><td><b>' + esc(e.title) + '</b>' + (e.subtitle ? '<br><span class="small muted">' + esc(e.subtitle) + '</span>' : "") + '<br><span class="small muted">' + esc(s.division + " · " + (s.firearms.map(FN).join(", ") || "–")) + '</span></td>' +
+      '<td>' + (e.tags || []).map(function(t){ return '<span class="libtag">' + esc(t) + '</span>'; }).join(" ") + '</td>' +
+      '<td class="small">' + esc((e.from && e.from.match) || "–") + (e.from && e.from.date ? '<br>' + esc(e.from.date) : "") + '</td>' +
+      '<td class="small' + (recent ? ' librecent' : '') + '" title="' + esc((e.used || []).join(", ")) + '">' + esc(lu || "never") + (recent ? '<br><span class="small">used this year</span>' : "") + '</td>' +
+      '<td class="n">' + tot.rounds + (tot.fixed ? "" : "+") + '</td>' +
+      '<td class="small" style="white-space:nowrap"><button data-la="add" class="primary small">Add to match</button> <button data-la="tags" class="small">Tags…</button> <button data-la="del" class="small danger">Delete</button></td></tr>';
+  }).join("") + '</tbody></table><p class="small muted" style="padding:4px 8px">' + l.length + ' of ' + total + ' saved stage(s).</p>';
+}
+function libListClick(ev){
+  var b = ev.target.closest("[data-la]"); if(!b) return;
+  var id = b.closest("tr").getAttribute("data-lid"), l = libLoad(), e = l.filter(function(x){ return x.id === id; })[0]; if(!e) return;
+  var a = b.getAttribute("data-la");
+  if(a === "add"){
+    var before = state.stages.length; appendStages([e.stage]);
+    var d = state.match.date || todayISO(); e.used = (e.used || []).filter(function(x){ return x !== d; }).concat([d]); libSave(l); libRender();
+    toast("Added “" + e.title + "” as stage " + (before + 1));
+  } else if(a === "tags"){
+    var t = prompt("Tags for “" + e.title + "” (comma separated):", (e.tags || []).join(", ")); if(t === null) return; e.tags = parseTags(t); libSave(l); libRender();
+  } else if(a === "del"){
+    if(!confirm("Remove “" + e.title + "” from the library? Your matches are not changed.")) return;
+    libSave(l.filter(function(x){ return x.id !== id; })); libRender(); toast("Removed from library");
+  }
+}
+
+/* ================= 2. Prop and target list ================= */
+var PL_ROWS = [
+  ["Paper targets", [["ipsc", "IPSC targets"], ["idpa", "IDPA targets"], ["bh", "Body-and-head targets"], ["qit", "FBI QIT-99 targets"]]],
+  ["No-shoots", [["ns_free", "No-shoot / hostage targets (stand-alone)"], ["ns_staple", "No-shoot overlays stapled to targets"]]],
+  ["Steel", [["steel_fall", "Falling steel plates"], ["popper", "Poppers"], ["steel_hang", "Hanging steel"], ["lr_plate", "LR plates (20 cm)"], ["steel_torso", "Steel torso plates"]]],
+  ["Stands", [["stand_paper", "Target stands (paper + stand-alone no-shoots)"], ["stand_hang", "Hanging-steel frames (hanging steel + hanging torsos)"], ["stand_steel", "Steel stands / bases (falling plates, LR plates, static torsos)"]]],
+  ["Positions", [["sp", "Shooting boxes (SP)"], ["cone", "Cones"], ["start", "Start position markers"]]],
+  ["Barrels", [["barrel_red", "Dump barrels – red"], ["barrel_blue", "Dump barrels – blue"], ["cbarrel", "Blue barrels (cover)"]]],
+  ["Walls & props", [["vtac", "V-Tac barricades"], ["wall", "Walls / panels"], ["door", "Doors"], ["port", "Windows / ports"], ["table", "Tables"], ["barricade", "Barricades"], ["fault", "Fault lines"]]]
+];
+function propCounts(st){
+  var c = {}, m = { wall: 0, fault: 0 }, inc = function(k, n){ c[k] = (c[k] || 0) + (n == null ? 1 : n); };
+  st.items.forEach(function(i){
+    var t = i.type;
+    if(TYPES[t].infra || t === "text") return;
+    if(t === "noshoot"){ inc("ns_free"); inc("stand_paper"); return; }
+    if(isPaper(i)){ inc(t); inc("stand_paper"); if(stapled(i)) inc("ns_staple"); return; }
+    if(t === "steel_hang" || (t === "steel_torso" && i.mount !== "static")){ inc(t); inc("stand_hang"); return; }
+    if(isSteel(i)){ inc(t); if(t !== "popper") inc("stand_steel"); return; }
+    if(t === "barrel"){ inc(i.color === "blue" ? "barrel_blue" : "barrel_red"); return; }
+    if(t === "cbarrel"){ inc("cbarrel", i.stack === "double" ? 2 : 1); return; }
+    if(t === "wall" || t === "fault"){ inc(t); m[t] += Math.hypot(i.x2 - i.x, i.y2 - i.y); return; }
+    inc(t);
+  });
+  return { c: c, m: m };
+}
+function propListHTML(){
+  var per = state.stages.map(propCounts), tot = {}, mt = { wall: 0, fault: 0 };
+  per.forEach(function(p){ Object.keys(p.c).forEach(function(k){ tot[k] = (tot[k] || 0) + p.c[k]; }); mt.wall += p.m.wall; mt.fault += p.m.fault; });
+  var h = '<table class="plist"><thead><tr><th>Item</th>' + state.stages.map(function(s, i){ return '<th class="n" title="' + esc(s.title) + '">S' + (i + 1) + '</th>'; }).join("") + '<th class="n">Match total</th></tr></thead><tbody>';
+  PL_ROWS.forEach(function(g){
+    var rows = g[1].filter(function(r){ return tot[r[0]]; }); if(!rows.length) return;
+    h += '<tr class="pgrp"><td colspan="' + (state.stages.length + 2) + '">' + esc(g[0]) + '</td></tr>';
+    rows.forEach(function(r){
+      var extra = (r[0] === "wall" || r[0] === "fault") ? function(v){ return v; } : null;
+      h += '<tr><td>' + esc(r[1]) + '</td>' + per.map(function(p){ var v = p.c[r[0]] || 0, mm = extra && v ? '<br><span class="small muted">' + fmtM(p.m[r[0]]) + '</span>' : ""; return '<td class="n">' + (v || "–") + mm + '</td>'; }).join("") + '<td class="n"><b>' + tot[r[0]] + '</b>' + (extra ? '<br><span class="small muted">' + fmtM(mt[r[0]]) + '</span>' : "") + '</td></tr>';
+    });
+  });
+  h += '</tbody></table>';
+  var fixed = []; state.stages.forEach(function(s, i){ var f = s.items.filter(function(x){ return TYPES[x.type].infra; }).length; if(f) fixed.push("S" + (i + 1) + ": " + f); });
+  var bays = state.stages.map(function(s, i){ return s.bay ? "S" + (i + 1) + " – " + s.bay.name : null; }).filter(Boolean);
+  var notes = [];
+  if(fixed.length) notes.push("Fixed range infrastructure (concrete, tyre walls, backstops) is not counted – it is already on the range (" + fixed.join(", ") + ").");
+  if(bays.length) notes.push("Bays: " + bays.join("; ") + ".");
+  notes.push("Stands are estimated from the diagram: one per paper target or stand-alone no-shoot, one frame per hanging plate or hanging torso. Poppers stand on their own base. Bring spares, pasters and staples.");
+  return h + notes.map(function(n){ return '<p class="small muted">' + esc(n) + '</p>'; }).join("");
+}
+function propListCSV(){
+  var per = state.stages.map(propCounts), rows = [["Group", "Item"].concat(state.stages.map(function(s, i){ return "Stage " + (i + 1); })).concat(["Match total"])];
+  PL_ROWS.forEach(function(g){ g[1].forEach(function(r){ var vs = per.map(function(p){ return p.c[r[0]] || 0; }), t = vs.reduce(function(a, b){ return a + b; }, 0); if(t) rows.push([g[0], r[1]].concat(vs).concat([t])); }); });
+  return rows.map(function(r){ return r.map(function(v){ v = String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(","); }).join("\r\n");
+}
+var PL_CSS = 'body{font-family:Barlow,Segoe UI,Arial,sans-serif;color:#14284b;margin:14mm}h1{font-size:20px;margin:0}h2{font-size:13px;font-weight:600;margin:2px 0 10px;color:#555}table.plist{border-collapse:collapse;width:100%;font-size:12px}.plist th,.plist td{border:1px solid #c9ced8;padding:3px 6px;text-align:left;vertical-align:top}.plist th{background:#14284b;color:#fff}.plist .n{text-align:center}.plist .pgrp td{background:#f3ead4;font-weight:700}.small{font-size:11px}.muted{color:#666}ol.st{font-size:12px;columns:2}@page{size:A4;margin:0}';
+function propListDoc(){
+  return '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Prop and target list – ' + esc(state.match.name) + '</title><style>' + PL_CSS + '</style></head><body><h1>Prop and target list – setup crew</h1><h2>' + esc(state.match.name + " · " + (state.match.date || "") + " · " + (state.match.venue || "")) + '</h2>' +
+    '<ol class="st">' + state.stages.map(function(s){ return '<li>' + esc(s.title) + (s.bay ? ' <span class="muted">(' + esc(s.bay.name) + ')</span>' : "") + '</li>'; }).join("") + '</ol>' + propListHTML() + '</body></html>';
+}
+function openPropList(){
+  dlgOpen("plDlg", "Prop and target list – " + state.match.name, '<p class="small muted">Counted from the diagrams of all ' + state.stages.length + ' stage(s). Per stage (S1, S2…) and match totals.</p><div id="plBody" style="overflow:auto;margin:6px 0">' + propListHTML() + '</div><div class="btnrow dlgfoot"><button id="plCSV">Download CSV</button><button id="plPrint" class="primary">Print / Save PDF</button><button id="plClose">Close</button></div>');
+  $("plClose").onclick = function(){ dlgClose("plDlg"); };
+  $("plCSV").onclick = function(){ download("spectre-props-" + slug(state.match.name) + "-" + (state.match.date || todayISO()) + ".csv", propListCSV(), "text/csv"); toast("Prop list CSV downloaded"); };
+  $("plPrint").onclick = printPropList;
+}
+function printPropList(){
+  var f = document.createElement("iframe"); f.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0"; document.body.appendChild(f);
+  f.contentDocument.open(); f.contentDocument.write(propListDoc()); f.contentDocument.close();
+  setTimeout(function(){ try{ f.contentWindow.focus(); f.contentWindow.print(); }catch(e){} setTimeout(function(){ f.remove(); }, 2000); }, 200);
+}
+
+/* ================= 3. Bay templates ================= */
+function baysLoad(){ var l = lsGet(BAY_KEY, []); return Array.isArray(l) ? l : []; }
+function baysSave(l){ return lsSet(BAY_KEY, l); }
+function bayFromStage(st, name, w, d){
+  var b = st.bay || { x0: -w / 2, y0: -2 };
+  var feats = st.items.filter(function(i){ return TYPES[i.type].infra; }).map(function(i){ var c = JSON.parse(JSON.stringify(i)); delete c.id; c.x -= b.x0; c.y -= b.y0; if(isLine(c)){ c.x2 -= b.x0; c.y2 -= b.y0; } return c; });
+  return { id: uid(), name: name, w: w, d: d, notes: "", downrange: +st.downrange || 0, features: feats };
+}
+function applyBay(st, t, opts){
+  opts = opts || {};
+  commit(function(){
+    var old = st.bay, nb = cleanBay({ name: t.name, w: t.w, d: t.d, x0: old ? old.x0 : -t.w / 2, y0: old ? old.y0 : -2 });
+    st.bay = nb;
+    if(opts.features !== false && t.features && t.features.length){
+      st.items = st.items.filter(function(i){ return !(TYPES[i.type].infra && i.bayFeat); });
+      t.features.forEach(function(f){ var it = JSON.parse(JSON.stringify(f)); it.id = uid(); it.bayFeat = 1; it.x += nb.x0; it.y += nb.y0; if(isLine(it)){ it.x2 += nb.x0; it.y2 += nb.y0; } st.items.push(it); });
+    }
+    if(opts.fit){
+      var tg = st.items.filter(function(i){ return !TYPES[i.type].infra; });
+      if(tg.length){
+        var xs = [], ys = []; tg.forEach(function(i){ xs.push(i.x); ys.push(i.y); if(isLine(i)){ xs.push(i.x2); ys.push(i.y2); } });
+        var bx = (Math.min.apply(null, xs) + Math.max.apply(null, xs)) / 2, by0 = Math.min.apply(null, ys);
+        var dx = (nb.x0 + nb.w / 2) - bx, dy = Math.max(nb.y0 + 1 - by0, Math.min(0, nb.y0 + nb.d - 0.5 - Math.max.apply(null, ys)));
+        if(by0 >= nb.y0 + 0.5 && Math.max.apply(null, ys) <= nb.y0 + nb.d) dy = 0;
+        tg.forEach(function(i){ i.x += dx; i.y += dy; if(isLine(i)){ i.x2 += dx; i.y2 += dy; } });
+      }
+    }
+  });
+  fitBay(st); render();
+}
+function fitBay(st){ if(typeof fitView === "function") fitView(); }
+function clearBay(st, keepFeat){
+  commit(function(){ delete st.bay; if(!keepFeat) st.items = st.items.filter(function(i){ return !i.bayFeat; }); });
+  render();
+}
+function openBays(){
+  var st = cur();
+  dlgOpen("bayDlg", "Bay templates", '<p class="small muted">Save each SWPC bay once (width across, depth downrange, and its fixed concrete / tyre walls and backstops), then pick it for a stage: the bay outline is drawn on the map and in the print, its fixed features are placed for you, and Rule checks warn when an item falls outside the bay. Dimensions are yours to measure – none are assumed.</p>' +
+    '<p><b>Stage ' + stageNo(st) + ' – ' + esc(st.title) + ':</b> ' + (st.bay ? esc(st.bay.name + " (" + fmtM(st.bay.w) + " × " + fmtM(st.bay.d) + ")") + ' <button id="bayNone" class="small">Remove bay from stage</button>' : '<span class="muted">no bay chosen</span>') + '</p>' +
+    '<div id="bayList" style="overflow:auto;margin:6px 0;border:1px solid #dde2ea;border-radius:6px"></div>' +
+    '<fieldset style="border:1px solid #dde2ea;border-radius:6px;margin:6px 0"><legend class="small"><b>New bay template</b></legend><div class="btnrow"><label class="inl">Name <input id="bayName" placeholder="e.g. SWPC Bay 3" style="width:160px"></label><label class="inl">Width (m) <input id="bayW" type="number" min="1" step="0.5" style="width:70px"></label><label class="inl">Depth (m) <input id="bayD" type="number" min="1" step="0.5" style="width:70px"></label><label class="inl" title="Copy the concrete walls, tyre walls and backstops drawn on the current stage into the template"><input type="checkbox" id="bayFeat" checked> take fixed features from this stage</label><button id="bayAdd" class="primary">Save template</button></div></fieldset>' +
+    '<div class="btnrow dlgfoot"><button id="bayExport">Export bays</button><button id="bayImport">Import bays…</button><input type="file" id="bayFile" accept=".json,application/json" hidden><button id="bayClose">Close</button></div>');
+  bayRender();
+  $("bayClose").onclick = function(){ dlgClose("bayDlg"); };
+  if($("bayNone")) $("bayNone").onclick = function(){ var keep = !confirm("Remove the bay from this stage.\nOK = also remove the fixed features it placed. Cancel = keep them."); clearBay(cur(), keep); openBays(); };
+  $("bayAdd").onclick = function(){
+    var n = $("bayName").value.trim(), w = +$("bayW").value, d = +$("bayD").value;
+    if(!n || !(w > 0) || !(d > 0)){ alert("Give the bay a name, a width and a depth in metres."); return; }
+    var t = bayFromStage(cur(), n, w, d); if(!$("bayFeat").checked) t.features = [];
+    var l = baysLoad(); l.push(t); baysSave(l); toast("Bay template saved: " + n + (t.features.length ? " (" + t.features.length + " fixed features)" : "")); openBays();
+  };
+  $("bayExport").onclick = function(){ download("spectre-bays-" + todayISO() + ".json", JSON.stringify({ app: APP_ID, kind: "bays", version: SCHEMA, bays: baysLoad() }, null, 1), "application/json"); };
+  $("bayImport").onclick = function(){ $("bayFile").click(); };
+  $("bayFile").onchange = function(){ var f = this.files && this.files[0], inp = this; if(!f) return; var rd = new FileReader(); rd.onload = function(){ inp.value = ""; try{ var r = JSON.parse(rd.result); if(!r || r.kind !== "bays" || !Array.isArray(r.bays)) throw 0; var l = baysLoad(), have = {}; l.forEach(function(b){ have[b.id] = 1; }); var n = 0; r.bays.forEach(function(b){ if(b && b.name && +b.w > 0 && +b.d > 0 && !have[b.id]){ l.push(b); n++; } }); baysSave(l); toast(n + " bay template(s) imported"); openBays(); }catch(e){ alert("That is not a Spectre bays file. Nothing was changed."); } }; rd.readAsText(f); };
+  $("bayList").addEventListener("click", function(ev){
+    var b = ev.target.closest("[data-ba]"); if(!b) return;
+    var id = b.closest("tr").getAttribute("data-bid"), l = baysLoad(), t = l.filter(function(x){ return x.id === id; })[0]; if(!t) return;
+    var a = b.getAttribute("data-ba");
+    if(a === "use"){ var off = cur().items.filter(function(i){ return !TYPES[i.type].infra; }).length; applyBay(cur(), t, { fit: off && confirm("Use " + t.name + " for this stage.\nOK = also move the drawing into the bay. Cancel = leave items where they are.") }); toast("Stage " + stageNo(cur()) + " now uses " + t.name); dlgClose("bayDlg"); }
+    else if(a === "new"){ addStage(); applyBay(cur(), t); toast("New stage in " + t.name); dlgClose("bayDlg"); }
+    else if(a === "del"){ if(!confirm("Delete the template “" + t.name + "”? Stages that use it keep their outline.")) return; baysSave(l.filter(function(x){ return x.id !== id; })); openBays(); }
+    else if(a === "edit"){ var w = prompt("Width of " + t.name + " (m):", t.w); if(w === null) return; var d = prompt("Depth of " + t.name + " (m):", t.d); if(d === null) return; var notes = prompt("Notes (berms, fixed props, max distance…):", t.notes || ""); if(+w > 0) t.w = +w; if(+d > 0) t.d = +d; if(notes !== null) t.notes = notes; baysSave(l); openBays(); }
+  });
+}
+function bayRender(){
+  var l = baysLoad(), box = $("bayList"); if(!box) return;
+  if(!l.length){ box.innerHTML = '<p class="muted" style="padding:10px">No bay templates yet. Measure a bay, draw its fixed walls / backstop on a stage, then save it below.</p>'; return; }
+  box.innerHTML = '<table class="eng" style="width:100%"><thead><tr><th>Bay</th><th>Size</th><th>Fixed features</th><th>Used by</th><th></th></tr></thead><tbody>' + l.map(function(t){
+    var used = state.stages.map(function(s, i){ return s.bay && s.bay.name === t.name ? "S" + (i + 1) : null; }).filter(Boolean);
+    var fc = {}; (t.features || []).forEach(function(f){ var n = TYPES[f.type] ? TYPES[f.type].n : f.type; fc[n] = (fc[n] || 0) + 1; });
+    return '<tr data-bid="' + esc(t.id) + '"><td><b>' + esc(t.name) + '</b>' + (t.notes ? '<br><span class="small muted">' + esc(t.notes) + '</span>' : "") + '</td><td>' + fmtM(t.w) + ' × ' + fmtM(t.d) + '</td><td class="small">' + (Object.keys(fc).map(function(k){ return fc[k] + " × " + esc(k); }).join("<br>") || "–") + '</td><td class="small">' + (used.join(", ") || "–") + '</td>' +
+      '<td style="white-space:nowrap"><button data-ba="use" class="primary small">Use for this stage</button> <button data-ba="new" class="small">New stage in bay</button> <button data-ba="edit" class="small">Edit…</button> <button data-ba="del" class="small danger">Delete</button></td></tr>';
+  }).join("") + '</tbody></table>';
+}
+
+/* ================= 4. QR export for the Spectre Scoring app (same SSQ1 format as its stage packs) ================= */
+var QR_CHUNK_D = 850, qrT = null;
+function b64uD(bytes){ var s = ""; for(var i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); }
+function qrMatchCodes(){
+  var obj = { app: APP_ID, version: SCHEMA, exportedAt: new Date().toISOString(), match: state.match, stages: state.stages, settings: state.settings };
+  var bytes = new TextEncoder().encode(JSON.stringify(obj));
+  var go = typeof CompressionStream !== "undefined" ? new Response(new Blob([bytes]).stream().pipeThrough(new CompressionStream("deflate-raw"))).arrayBuffer().then(function(ab){ return "Z" + b64uD(new Uint8Array(ab)); }) : Promise.resolve("P" + b64uD(bytes));
+  return go.then(function(data){ var id = uid().slice(0, 6), n = Math.ceil(data.length / QR_CHUNK_D), out = []; for(var i = 0; i < n; i++) out.push("SSQ1|" + id + "|" + (i + 1) + "|" + n + "|" + data.slice(i * QR_CHUNK_D, (i + 1) * QR_CHUNK_D)); return out; });
+}
+function qrSVGD(text){ var q = qrcode(0, "L"); q.addData(text, "Byte"); q.make(); return q.createSvgTag({ cellSize: 4, margin: 4, scalable: true }); }
+function qrStop(){ clearInterval(qrT); qrT = null; }
+function openQR(){
+  qrMatchCodes().then(function(codes){
+    var i = 0;
+    dlgOpen("qrDlg", "Send match to the scoring app by QR", '<p class="small">On the main scoring phone: <b>Match → Scan QR codes…</b>, then point it at this screen. ' + (codes.length > 1 ? 'The ' + codes.length + ' codes change by themselves every 1.5 s – keep the phone pointed until it says all are read.' : 'One code holds the whole match.') + ' Works offline.</p>' +
+      '<div id="qrBox" style="width:min(420px,70vh);margin:6px auto;background:#fff"></div><p id="qrNo" class="small" style="text-align:center"></p>' +
+      '<div class="btnrow dlgfoot"><button id="qrPrev">◀</button><button id="qrPause">Pause</button><button id="qrNext">▶</button><button id="qrClose">Close</button></div>');
+    var show = function(){ $("qrBox").innerHTML = qrSVGD(codes[i]); $("qrNo").textContent = "Code " + (i + 1) + " of " + codes.length + " · " + state.stages.length + " stage(s) · " + esc(state.match.name); };
+    show();
+    var play = function(){ qrStop(); if(codes.length > 1) qrT = setInterval(function(){ if(!$("qrBox")) return qrStop(); i = (i + 1) % codes.length; show(); }, 1500); };
+    play();
+    $("qrPrev").onclick = function(){ qrStop(); $("qrPause").textContent = "Play"; i = (i + codes.length - 1) % codes.length; show(); };
+    $("qrNext").onclick = function(){ qrStop(); $("qrPause").textContent = "Play"; i = (i + 1) % codes.length; show(); };
+    $("qrPause").onclick = function(){ if(qrT){ qrStop(); this.textContent = "Play"; } else { play(); this.textContent = "Pause"; } };
+    if(codes.length < 2){ $("qrPrev").hidden = $("qrNext").hidden = $("qrPause").hidden = true; }
+    $("qrClose").onclick = function(){ dlgClose("qrDlg"); };
+  }).catch(function(e){ alert("Could not make the QR codes: " + e.message); });
+}
+
+/* ================= wiring ================= */
+document.addEventListener("DOMContentLoaded", function(){
+  var act = document.querySelector("header .actions"), ex = $("btnExport");
+  var mk = function(id, txt, title, fn, cls){ var b = document.createElement("button"); b.id = id; b.textContent = txt; b.title = title; if(cls) b.className = cls; b.addEventListener("click", fn); return b; };
+  act.insertBefore(mk("btnQR", "QR to scoring", "Show the match as QR code(s) for the Spectre Scoring app (Match → Scan QR codes…)", openQR), ex.nextSibling);
+  act.insertBefore(mk("btnLibrary", "Stage library", "Saved stages: search, tags, last used, add a copy to this match", openLibrary), $("btnAddFrom"));
+  act.insertBefore(mk("btnProps", "Prop list", "Prop and target list for the setup crew (per stage and match totals)", openPropList), $("btnExample"));
+  var row = $("stExport").parentNode;
+  row.insertBefore(mk("stLib", "Save to library", "Save this stage to the stage library", libSaveCurrent), $("stExport").nextSibling);
+  row.insertBefore(mk("stBay", "Bay…", "Pick a bay template for this stage, or save one", openBays), $("stLib").nextSibling);
+  var st = document.createElement("style"); st.textContent = '.libtag{display:inline-block;background:#eef2f8;border:1px solid #c9d3e3;border-radius:9px;padding:0 6px;font-size:11px;margin:1px}.librecent{color:#a05a00;font-weight:600}.xdlg .dlgbox{width:min(960px,96vw)}table.plist{border-collapse:collapse;width:100%;font-size:13px}.plist th,.plist td{border:1px solid #dde2ea;padding:3px 6px}.plist .n{text-align:center}.plist .pgrp td{background:#f3ead4;font-weight:700}#qrBox svg{width:100%;height:auto;display:block}';
+  document.head.appendChild(st);
+  document.addEventListener("keydown", function(ev){ var d = document.querySelector(".xdlg:not([hidden])"); if(!d) return; ev.stopImmediatePropagation(); if(ev.key === "Escape"){ ev.preventDefault(); dlgClose(d.id); } }, true);
+  if(window.SSD){ SSD.lib = { load: libLoad, save: libSaveStage, importText: libImportText, open: openLibrary, lastUsed: libLastUsed }; SSD.props = { counts: propCounts, html: propListHTML, csv: propListCSV, doc: propListDoc, open: openPropList }; SSD.bays = { load: baysLoad, save: baysSave, fromStage: bayFromStage, apply: applyBay, clear: clearBay, outside: itemsOutsideBay, open: openBays }; SSD.qr = { codes: qrMatchCodes, open: openQR }; }
+});
 </script>
 </body>
 </html>
