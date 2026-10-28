@@ -645,7 +645,7 @@ var TORSO_MOUNT = { hanging: "hanging", "static": "static" };
 
 function newStage(title){
   return { id: uid(), title: title || "New stage", subtitle: "", division: "DB", firearms: ["handgun"], classesAuto: true, classes: [],
-    eligibleLabel: "", limited: true, scoring: "negative", scoringAuto: true, parTime: null, cover: false,
+    eligibleLabel: "", limited: true, scoring: "negative", scoringAuto: true, parTime: null, cover: false, coverItems: null,
     startCondition: "", staging: "", procedure: [], layout: [], mdNotes: [], diagramNote: "",
     downrange: 0, semiAuto: false, ranking: "auto", req: {}, qualStd: "", diagramPage: false,
     loads: {}, engagements: [], transitions: [], penalties: { procedural: true, tactical: true, noshoot: true, other: "" },
@@ -659,6 +659,8 @@ function normalizeStage(s){
   var d = newStage(); var o = {};
   Object.keys(d).forEach(function(k){ o[k] = (s && s[k] !== undefined && s[k] !== null) ? s[k] : d[k]; });
   if(s && s.parTime === null) o.parTime = null;
+  /* number of cover items on the stage (caps the use-of-cover bonus count); null = not set */
+  o.coverItems = (o.coverItems === null || o.coverItems === undefined || o.coverItems === "" || isNaN(parseInt(o.coverItems, 10))) ? null : Math.max(0, parseInt(o.coverItems, 10));
   if(!o.id) o.id = uid();
   ["firearms","classes","procedure","layout","mdNotes","engagements","transitions","items","path"].forEach(function(k){ if(!Array.isArray(o[k])) o[k] = []; });
   if(typeof o.loads !== "object" || Array.isArray(o.loads)) o.loads = {};
@@ -1069,6 +1071,7 @@ function runChecks(st, S){
   if(st.scoring === "positive" && !(+st.parTime > 0)) add("error", "PAR_MISSING", "Positive scoring needs a Par Time.", "§4.1.1, p.60; §4.2.1, p.61");
   if(st.scoring === "lr" && +st.parTime > 0) add("info", "LR_PAR", "LR Par Time: brief it; shots after expiry do not count and unengaged targets are misses.", "§4.3.4, p.66");
   if(st.division === "CQ" && !st.cover) add("error", "COVER_CQ", "CQ always applies use-of-cover bonuses.", "§3.1, p.47");
+  if((st.cover || st.division === "CQ") && st.division !== "LR" && st.coverItems == null) add("info", "COVER_ITEMS", "Set the number of cover items so the scoring app can check the cover bonus count.", "§4.2.3, p.63-64");
   if(st.division === "LR" && st.cover) add("error", "COVER_LR", "Use of cover does not apply in LR (barricades are support, not cover).", "§3.5, p.56; §4.2.3, p.64");
   if((st.division === "DB" || st.division === "QS" || st.division === "BL") && st.cover) add("info", "COVER_BRIEF", "Cover bonus on a " + st.division + " stage: it must be stated in the COF briefing.", st.division === "BL" ? "§3.4, p.54" : "§4.2.3, p.64");
   add("info", "WALK", st.division + " walkthrough: " + div.walk, div.ref);
@@ -1968,7 +1971,7 @@ function renderBrief(){
     '<div class="grid4"><div><label for="bDiv">Division</label><select id="bDiv" data-f="division">' + Object.keys(DIVS).map(function(k){ return opt(k, k + " – " + DIVS[k].n, st.division); }).join("") + '</select></div>' +
     '<div><label for="bModel">Scoring model' + (st.scoringAuto ? " (division default)" : " (overridden)") + '</label><select id="bModel" data-f="scoring">' + Object.keys(MODELS).map(function(k){ return opt(k, MODELS[k].long, st.scoring); }).join("") + '</select></div>' +
     '<div><label for="bPar">Par Time (s)' + (st.scoring === "positive" ? " – required" : "") + '</label><input id="bPar" type="number" min="0" step="0.5" data-f="parTime" data-type="numnull" value="' + (st.parTime == null ? "" : st.parTime) + '"' + (st.scoring === "positive" || st.scoring === "lr" || st.scoring === "qs" ? "" : " disabled") + '></div>' +
-    '<div><label>Stage type</label><label class="inl"><input type="checkbox" id="bLimited" data-f="limited" data-type="bool"' + (st.limited ? " checked" : "") + '> Limited (fixed round count)</label><label class="inl"><input type="checkbox" id="bCover" data-f="cover" data-type="bool"' + (st.cover ? " checked" : "") + '> Cover bonus applied</label></div></div>' +
+    '<div><label>Stage type</label><label class="inl"><input type="checkbox" id="bLimited" data-f="limited" data-type="bool"' + (st.limited ? " checked" : "") + '> Limited (fixed round count)</label><label class="inl"><input type="checkbox" id="bCover" data-f="cover" data-type="bool"' + (st.cover ? " checked" : "") + '> Cover bonus applied</label><label for="bCoverN" class="inl">Cover items <input id="bCoverN" type="number" min="0" step="1" style="width:4.5em" data-f="coverItems" data-type="intnull" value="' + (st.coverItems == null ? "" : st.coverItems) + '"' + (st.cover || st.division === "CQ" ? "" : " disabled") + '></label></div></div>' +
     '<div class="grid4"><div><label for="bDown">Downrange direction (° clockwise from up the page)</label><input id="bDown" type="number" step="5" data-f="downrange" data-type="num" value="' + (st.downrange || 0) + '"></div>' +
     /* Ranking select (#bRank: default / same class only / open) removed with class ranking */ "" +
     '<div><label>Print layout</label><label class="inl"><input type="checkbox" id="bDiagPage" data-f="diagramPage" data-type="bool"' + (st.diagramPage ? " checked" : "") + '> Diagram on its own page</label></div>' +
@@ -2050,6 +2053,7 @@ function onBriefChange(ev){
       if(ty === "bool") v = el.checked;
       else if(ty === "lines") v = v.split("\n").map(function(x){ return x.trim(); }).filter(Boolean);
       else if(ty === "num"){ v = parseFloat(v); if(isNaN(v)) v = 0; v = ((v % 360) + 360) % 360; }
+      else if(ty === "intnull"){ v = v === "" ? null : parseInt(v, 10); if(v !== null && (isNaN(v) || v < 0)) v = null; }
       else if(ty === "numnull"){ v = v === "" ? null : parseFloat(v); if(v !== null && isNaN(v)) v = null; }
       st[f] = v;
       if(f === "division" && st.scoringAuto) st.scoring = DIVS[v].model;
@@ -2248,7 +2252,7 @@ function overviewPage(n, N){
     qs: "<b>Qualification standard</b> (§3.3, p.51-52): scoring and pass criteria as per the standard, briefed before the qualification." };
   Object.keys(mu).forEach(function(m){ li.push("<b>Scoring</b> (" + listNos(mu[m]) + "): " + mtxt[m]); });
   var cov = state.stages.filter(function(s){ return s.cover; }).map(stageNo), par = state.stages.filter(function(s){ return +s.parTime > 0; });
-  li.push("<b>Use of cover</b>: " + (cov.length ? "bonus applied on " + listNos(cov) + " (§4.2.3, p.63-64)." : "<b>no use-of-cover bonus</b> on these stages.") + " " + (par.length ? "Par Time: " + par.map(function(s){ return "stage " + stageNo(s) + " " + s.parTime + " s"; }).join(", ") + "." : "<b>No Par Time.</b>") + " Scoring values are on page 2 and repeated on each stage page.");
+  li.push("<b>Use of cover</b>: " + (cov.length ? "bonus applied on " + listNos(cov) + " (§4.2.3, p.63-64)" + (function(){ var ci = state.stages.filter(function(s){ return s.cover && s.coverItems != null; }); return ci.length ? "; cover items: " + ci.map(function(s){ return "stage " + stageNo(s) + " " + s.coverItems; }).join(", ") : ""; })() + "." : "<b>no use-of-cover bonus</b> on these stages.") + " " + (par.length ? "Par Time: " + par.map(function(s){ return "stage " + stageNo(s) + " " + s.parTime + " s"; }).join(", ") + "." : "<b>No Par Time.</b>") + " Scoring values are on page 2 and repeated on each stage page.");
   var lim = state.stages.filter(function(s){ return s.limited; }).map(stageNo);
   if(lim.length) li.push("<b>Limited stages</b> (" + listNos(lim) + "): fixed round count with no make-up shots. Firing more rounds than permitted at a limited target is a procedural penalty of <b>+3 s / −3 pts per occurrence</b> (§4.4.2, p.68).");
   li.push("<b>Start signal:</b> the buzzer (shot timer). <b>“Loaded and ready”</b> = the start condition the Match Director (MD) briefs for the class (holster, chambered or unchambered carry, as the Firearm Class rules allow; §1.1 p.18, §5.4).");
@@ -2303,7 +2307,7 @@ function scoringPage(n, N){
   if(parSt.length) h += '<p><b>Par Times:</b> ' + esc(parSt.map(function(s){ return "stage " + stageNo(s) + " " + s.parTime + " s"; }).join(", ")) + '. Shots fired after the Par Time do not count; targets not engaged are scored as misses (§4.2.1, p.61).</p>';
   h += '<table class="sumtab" data-scoring="summary"><thead><tr><th>Stage</th><th>Model</th><th>Type</th><th>Ranking</th><th>Par Time</th><th>Cover bonus</th><th>Hit requirements (non-default)</th><th>No-shoots</th></tr></thead><tbody>' +
     state.stages.map(function(st){ var ex = reqExceptions(st), ns = noShoots(st);
-      return '<tr><td><b>' + stageNo(st) + '</b> ' + esc(st.title) + '</td><td>' + esc(MODELS[st.scoring].n) + '</td><td>' + (st.limited ? "Limited" : "Unlimited") + '</td><td>' + (stageRanking(st) === "open" ? "Open" : "By class") + '</td><td>' + (+st.parTime > 0 ? st.parTime + " s" : "–") + '</td><td>' + (st.scoring === "negative" || st.scoring === "positive" ? (st.cover ? "Yes" : "No") : "–") + '</td><td>' + (ex.length || sgSummary(st).length ? esc(ex.concat(sgSummary(st).map(function(x){ return "shotgun " + x; })).join(" · ")) : "Default (" + (st.limited ? "all engaged rounds" : "best 2") + ")") + '</td><td>' + (ns.length ? esc(ns.map(function(x){ return x.label; }).join(", ")) : "–") + '</td></tr>'; }).join("") + '</tbody></table>';
+      return '<tr><td><b>' + stageNo(st) + '</b> ' + esc(st.title) + '</td><td>' + esc(MODELS[st.scoring].n) + '</td><td>' + (st.limited ? "Limited" : "Unlimited") + '</td><td>' + (stageRanking(st) === "open" ? "Open" : "By class") + '</td><td>' + (+st.parTime > 0 ? st.parTime + " s" : "–") + '</td><td>' + (st.scoring === "negative" || st.scoring === "positive" ? (st.cover ? "Yes" + (st.coverItems != null ? " (" + st.coverItems + " items)" : "") : "No") : "–") + '</td><td>' + (ex.length || sgSummary(st).length ? esc(ex.concat(sgSummary(st).map(function(x){ return "shotgun " + x; })).join(" · ")) : "Default (" + (st.limited ? "all engaged rounds" : "best 2") + ")") + '</td><td>' + (ns.length ? esc(ns.map(function(x){ return x.label; }).join(", ")) : "–") + '</td></tr>'; }).join("") + '</tbody></table>';
   if(cols.length){
     var zt = zoneTypesUsed(state.stages);
     h += '<h4>2. Paper and cardboard targets (§4.2.2, p.61-62)</h4><table><thead><tr><th>Zone / result</th>' + zoneHeads(zt) + heads + '<th>Note</th></tr></thead><tbody>' +
@@ -2398,7 +2402,7 @@ function scoringStrip(st, diagPage){
   it.push(st.limited ? "Limited" : "Unlimited");
   it.push(stageRanking(st) === "open" ? "Open ranking (all competitors)" : "Ranked by class (p.17)");
   if(st.scoring !== "lr" && st.scoring !== "qs" || +st.parTime > 0) it.push(+st.parTime > 0 ? "Par Time " + st.parTime + " s" : "No Par Time");
-  if(st.scoring === "negative" || st.scoring === "positive") it.push("Cover bonus: " + (st.cover ? "<b>yes</b>" : "no"));
+  if(st.scoring === "negative" || st.scoring === "positive") it.push("Cover bonus: " + (st.cover ? "<b>yes</b>" + (st.coverItems != null ? " – " + st.coverItems + " cover item" + (st.coverItems === 1 ? "" : "s") : "") : "no"));
   var ex = reqExceptions(st);
   it.push("Hits: " + (sgOnly(st) ? "shotgun: 1 round per target" + (st.limited ? ", all scored" : "") : st.limited ? "all engaged rounds scored" : "best 2, no cap on shots") + (ex.length ? "; <b>" + esc(ex.join(" · ")) + "</b>" : ""));
   var sgs = sgSummary(st).filter(function(x){ return /buckshot/.test(x); }); if(sgs.length) it.push("Shotgun: <b>" + esc(sgs.join(" · ")) + "</b>");
@@ -2468,7 +2472,7 @@ function roSheet(st, n, N){
   var no = stageNo(st), tg = st.items.filter(function(i){ return isTarget(i) && !isNoShoot(i); });
   var zt = zoneTypesUsed([st]).filter(function(t){ return st.items.some(function(i){ return i.type === t; }); });
   var h = '<div class="page rosheet" data-page="ro" data-stage="' + no + '" data-label="RO sheet ' + no + '"><div class="sbar"><b>RO SCORE SHEET – STAGE ' + no + ': ' + esc(st.title.toUpperCase()) + '</b><span>' + esc(MODELS[st.scoring].long.toUpperCase()) + '</span></div>';
-  h += '<p>' + esc(roundsText(st, true)) + ' · ' + (st.limited ? "Limited" : "Unlimited") + (+st.parTime > 0 ? " · Par " + st.parTime + " s" : "") + ' · Per target write hits as ' + (zt.length ? esc(zt.map(function(t){ return isQual(t) ? "per the qualification standard" + (st.qualStd ? " – " + st.qualStd : "") + " (" + ZONES[t].n + ")" : ZONES[t].hz + "/" + ZONES[t].pz1 + "/" + ZONES[t].pz2 + " (" + ZONES[t].n + ")"; }).join(", ")) : "hit / miss") + ' and misses as M. ' + (st.cover ? "Rate each use of cover 0 / 1 / 2." : "") + '</p>';
+  h += '<p>' + esc(roundsText(st, true)) + ' · ' + (st.limited ? "Limited" : "Unlimited") + (+st.parTime > 0 ? " · Par " + st.parTime + " s" : "") + ' · Per target write hits as ' + (zt.length ? esc(zt.map(function(t){ return isQual(t) ? "per the qualification standard" + (st.qualStd ? " – " + st.qualStd : "") + " (" + ZONES[t].n + ")" : ZONES[t].hz + "/" + ZONES[t].pz1 + "/" + ZONES[t].pz2 + " (" + ZONES[t].n + ")"; }).join(", ")) : "hit / miss") + ' and misses as M. ' + (st.cover ? "Rate each use of cover 0 / 1 / 2" + (st.coverItems != null ? " (max " + st.coverItems + " cover items)" : "") + "." : "") + '</p>';
   h += '<p><b>Hit requirements:</b> ' + (reqSummary(st) || "–") + '. Each required hit not made is a miss.' + (noShoots(st).length ? ' <b>No-shoots:</b> ' + esc(nsText(st)) + '.' : "") + ' <b>Ranking:</b> ' + esc(RANKINGS[stageRanking(st)]) + '.</p>';
   if(tg.some(function(t){ return reqOf(st, t).buck; })) h += '<p class="sgro"><b>Buckshot (' + esc(labelRanges(tg.filter(function(t){ return reqOf(st, t).buck; }).map(function(t){ return t.label; }))) + '): 2 best pairs.</b> Pair the pellet holes, best pairs first; each pair scores at the lower zone of its two holes (4 HZ holes = 2 HZ; 3 HZ + 5 PZ1 + 1 PZ2 = 1 HZ + 1 PZ1). Slug = 1 hit. 1 round per target.</p>';
   h += '<table><thead><tr><th style="width:30mm">Competitor</th><th>Class</th><th>' + (st.scoring === "positive" ? "Points" : "Time") + '</th>' + tg.map(function(t){ return "<th>" + esc(t.label) + '<br><span class="rq">' + esc(reqOf(st, t).short) + "</span></th>"; }).join("") + '<th>Proc.</th><th>Tac.</th><th>NS</th>' + (st.cover ? "<th>Cover</th>" : "") + '<th>Total</th><th>RO</th></tr></thead><tbody>';
