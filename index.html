@@ -541,7 +541,10 @@ var BUCK_RULE = "Buckshot: 1 round per target; the pellet holes score as 2 hits 
 var REQ_MODES = { best2: "Best 2", fixed: "Fixed N, all scored", moz: "Mozambique (2 body + 1 head)", custom: "Custom" };
 var SEMI_AUTO = ["MSR","ESR","MSC","ESC","MCC","SLR","ELR","SLC","ELC","LCC","SPC","EPC"];
 var SEMI_AUTO_TEXT = "Semi-Auto Rifle classes (Modern, Legacy, PCC)";
-var RANKINGS = { "class": "Same class only (p.17)", open: "Open ranking (all competitors)" };
+/* Class ranking removed for now (Oct 2026, MD request). To restore: add back  "class": "Same class only (p.17)"  here,
+   the stageRanking() default, the RANKING warning in b-logic.js, and the #bRank select in e-forms.js.
+   Originals: /workspace/backups/designer-src-preclass/ and /workspace/backups/vendor-preclass/ */
+var RANKINGS = { open: "Open ranking (all competitors)" };
 var NS_KIND = { noshoot: "no-shoot", hostage: "hostage" };
 var BARREL_STACK = { single: { n: "Single", h: 0.9, cover: "kneeling / low cover" }, double: { n: "Stacked double (two high)", h: 1.8, cover: "standing cover" } };
 var BARREL_DIA = 0.58;
@@ -795,7 +798,8 @@ function steelMin(fa){ return FIREARMS[fa].steelMin; }
 /* angle of an engagement line from the stage's downrange direction (dr: degrees clockwise from up the page), 0..180 */
 function angleFromDownrange(p, t, dr){ var dx = t.x - p.x, dy = t.y - p.y; if(!dx && !dy) return 0; var a = Math.atan2(dx, dy) * 180 / Math.PI - (+dr || 0); a = ((a % 360) + 540) % 360 - 180; return Math.abs(a); }
 function usedFirearmTypes(st){ var u = {}; st.engagements.forEach(function(e){ u[e.firearm] = 1; }); if(!st.engagements.length) st.firearms.forEach(function(f){ u[f] = 1; }); return Object.keys(u); }
-function stageRanking(st){ return st.ranking && st.ranking !== "auto" ? st.ranking : (usedFirearmTypes(st).length >= 2 ? "open" : "class"); }
+/* every stage is ranked open; an old saved "class" setting is ignored (normalizeStage resets it to "auto") */
+function stageRanking(st){ return "open"; }
 /* ---- hit requirements per target ---- */
 /* ---- shotgun on cardboard / paper: always exactly 1 round per target (slug 1 hit, buckshot 2 best pairs) ---- */
 function effAmmo(e, t){ if(e.firearm !== "shotgun") return ""; return AMMO[e.ammo] ? e.ammo : (t && isSteel(t) ? "bird" : "slug"); }
@@ -1086,8 +1090,7 @@ function runChecks(st, S){
   if(st.semiAuto && st.firearms.indexOf("rifle") >= 0) fg.pcc = "rifle";
   var extra = classes.filter(function(c){ return !fg[CLS[c].g]; });
   if(extra.length) add("warn", "CLASS_EXTRA", "Eligible classes " + extra.join(", ") + " do not match the stage firearms.", "Chapter 1, p.17");
-  var rk = stageRanking(st);
-  if(rk === "class" && usedFirearmTypes(st).length >= 2) add("warn", "RANKING", "Multi-gun stage ranked same class only: SWPC multi-gun stages use one open ranking for everyone.", "Club rule (confirmed by the MD); p.17");
+  /* RANKING warning (multi-gun stage ranked same class only) removed with class ranking */
   st.firearms.forEach(function(f){ if(!classes.some(function(c){ return FIREARMS[f].groups.indexOf(CLS[c].g) >= 0; })) add("warn", "CLASS_NONE", "No eligible class is selected for the " + FN(f).toLowerCase() + ".", "Chapter 1, p.17"); });
   st.firearms.forEach(function(f){ if(!rb[f] && st.engagements.length) add("warn", "FIREARM_UNUSED", FN(f) + " is ticked but has no engagements.", ""); });
 
@@ -1967,7 +1970,7 @@ function renderBrief(){
     '<div><label for="bPar">Par Time (s)' + (st.scoring === "positive" ? " – required" : "") + '</label><input id="bPar" type="number" min="0" step="0.5" data-f="parTime" data-type="numnull" value="' + (st.parTime == null ? "" : st.parTime) + '"' + (st.scoring === "positive" || st.scoring === "lr" || st.scoring === "qs" ? "" : " disabled") + '></div>' +
     '<div><label>Stage type</label><label class="inl"><input type="checkbox" id="bLimited" data-f="limited" data-type="bool"' + (st.limited ? " checked" : "") + '> Limited (fixed round count)</label><label class="inl"><input type="checkbox" id="bCover" data-f="cover" data-type="bool"' + (st.cover ? " checked" : "") + '> Cover bonus applied</label></div></div>' +
     '<div class="grid4"><div><label for="bDown">Downrange direction (° clockwise from up the page)</label><input id="bDown" type="number" step="5" data-f="downrange" data-type="num" value="' + (st.downrange || 0) + '"></div>' +
-    '<div><label for="bRank">Ranking' + (st.ranking === "auto" ? " (default)" : " (overridden)") + '</label><select id="bRank" data-f="ranking">' + opt("auto", "Default – " + RANKINGS[stageRanking(st)], st.ranking) + Object.keys(RANKINGS).map(function(k){ return opt(k, RANKINGS[k], st.ranking); }).join("") + '</select></div>' +
+    /* Ranking select (#bRank: default / same class only / open) removed with class ranking */ "" +
     '<div><label>Print layout</label><label class="inl"><input type="checkbox" id="bDiagPage" data-f="diagramPage" data-type="bool"' + (st.diagramPage ? " checked" : "") + '> Diagram on its own page</label></div>' +
     (qualSuggested(st) || st.qualStd ? '<div style="grid-column:span 2"><label for="bQual">Qualification standard' + (qualSuggested(st) ? ' <span class="sugg">suggested: ' + esc(qualReason(st)) + '</span>' : "") + '</label><input id="bQual" data-f="qualStd" placeholder="e.g. FBI Pistol Qualification" value="' + esc(st.qualStd) + '"></div>' : "") + '</div>' +
     '<label>Firearms used</label><div>' + FA_ORDER.map(function(f){ return '<label class="inl"><input type="checkbox" data-fa="' + f + '"' + (st.firearms.indexOf(f) >= 0 ? " checked" : "") + '> ' + FIREARMS[f].n + '</label>'; }).join("") + '</div></div>';
@@ -2126,7 +2129,7 @@ function renderSettings(){
     '<li><b>Zones:</b> IPSC A / C / D = HZ / PZ1 / PZ2. IDPA down-0 / down-1 / down-3 = HZ / PZ1 / PZ2. Body-and-head cardboard targets are scored like IDPA. Values come from the scoring model: positive HZ +7, PZ1 +3, PZ2 +1, miss −7; negative HZ +0 s, PZ1 +1 s, PZ2 +3 s, miss +7 s.</li>' +
     '<li><b>PCC on steel:</b> 15 m minimum.</li>' +
     '<li><b>Hit requirements:</b> limited stages score all required rounds per target by default; unlimited stages default to best 2 with no shot cap. Each required hit not made is a miss.</li>' +
-    '<li><b>Ranking:</b> single-firearm stages rank by class (p.17); multi-gun stages use one open ranking for everyone.</li>' +
+    '<li><b>Ranking:</b> every stage uses one open ranking for everyone.</li>' +
     '<li><b>Semi-Auto Rifle classes:</b> ' + SEMI_AUTO.join(", ") + ' (Modern, Legacy, PCC).</li></ul></div>';
 }
 function onSettingsChange(ev){
