@@ -591,15 +591,15 @@ var TYPES = {
   cone:      { n: "Cone (position)",      k: "pos",  pre: "SP" },
   start:     { n: "Start position",       k: "pos",  fixed: "START" },
   barrel:    { n: "Dump barrel (transition)", k: "prop", pre: "B", pos: true },
-  cbarrel:   { n: "Barrel (blue)",        k: "prop", pre: "BB" },
-  vtac:      { n: "V-Tac barricade",      k: "line", pre: "VT", oneClick: 1.2 },
+  cbarrel:   { n: "Barrel (blue)",        k: "prop", pre: "BB", cover: true },
+  vtac:      { n: "V-Tac barricade",      k: "line", pre: "VT", oneClick: 1.2, cover: true },
   wall:      { n: "Wall",                 k: "line" },
   concrete:  { n: "Concrete wall (fixed)", k: "line", oneClick: 3, infra: true },
   tyres:     { n: "Tyre wall (fixed)",    k: "line", oneClick: 2.4, infra: true },
   backstop:  { n: "Backstop (270° range)", k: "line", oneClick: 6, infra: true },
   fault:     { n: "Fault line",           k: "line" },
-  door:      { n: "Door",                 k: "prop", w: 0.9 },
-  port:      { n: "Window / port",        k: "prop", w: 0.6 },
+  door:      { n: "Doorway (cover)",      k: "prop", w: 0.9, cover: true },
+  port:      { n: "Aperture / window (cover)", k: "prop", w: 0.6, cover: true },
   table:     { n: "Table",                k: "prop", w: 1.8 },
   barricade: { n: "Barricade",            k: "prop", w: 1.2 },
   text:      { n: "Text label",           k: "text" }
@@ -619,6 +619,11 @@ var PALETTE = [
   ["Props", ["cbarrel","vtac","barrel","wall","door","port","table","barricade","fault","text"]],
   ["Range infrastructure", ["concrete","tyres","backstop"]]
 ];
+/* cover props: blue barrels (a stack counts once), V-Tac barricades, doorways and apertures */
+function isCoverProp(it){ return !!(TYPES[it.type] && TYPES[it.type].cover); }
+function coverPropCount(st){ return st.items.filter(isCoverProp).length; }
+/* auto mode: the stage's cover-item count follows the map; typing a number overrides it */
+function syncCoverItems(st){ if(st.coverAuto && (st.cover || st.division === "CQ") && st.division !== "LR"){ var n = coverPropCount(st); st.coverItems = n > 0 ? n : null; } }
 function isTarget(it){ return TYPES[it.type] && TYPES[it.type].k === "target"; }
 function isSteel(it){ return !!(TYPES[it.type] && TYPES[it.type].steel); }
 function isPaper(it){ return !!(TYPES[it.type] && TYPES[it.type].paper); }
@@ -661,6 +666,7 @@ function normalizeStage(s){
   if(s && s.parTime === null) o.parTime = null;
   /* number of cover items on the stage (caps the use-of-cover bonus count); null = not set */
   o.coverItems = (o.coverItems === null || o.coverItems === undefined || o.coverItems === "" || isNaN(parseInt(o.coverItems, 10))) ? null : Math.max(0, parseInt(o.coverItems, 10));
+  o.coverAuto = s && (s.coverAuto === true || s.coverAuto === false) ? s.coverAuto : o.coverItems == null;
   if(!o.id) o.id = uid();
   ["firearms","classes","procedure","layout","mdNotes","engagements","transitions","items","path"].forEach(function(k){ if(!Array.isArray(o[k])) o[k] = []; });
   if(typeof o.loads !== "object" || Array.isArray(o.loads)) o.loads = {};
@@ -1491,7 +1497,7 @@ function snapshot(){ return JSON.stringify({ match: state.match, stages: state.s
 function restoreSnap(s){ var o = JSON.parse(s); state.match = o.match; state.stages = o.stages; state.settings = o.settings; state.cur = o.cur; }
 function pushUndo(before){ undoStack.push(before); if(undoStack.length > 300) undoStack.shift(); redoStack = []; }
 function commit(fn, opts){
-  var before = snapshot(); fn(); var after = snapshot();
+  var before = snapshot(); fn(); state.stages.forEach(syncCoverItems); var after = snapshot();
   if(after === before){ if(!(opts && opts.quiet)) render(); return false; }
   pushUndo(before); save(); render(); return true;
 }
@@ -1971,7 +1977,7 @@ function renderBrief(){
     '<div class="grid4"><div><label for="bDiv">Division</label><select id="bDiv" data-f="division">' + Object.keys(DIVS).map(function(k){ return opt(k, k + " – " + DIVS[k].n, st.division); }).join("") + '</select></div>' +
     '<div><label for="bModel">Scoring model' + (st.scoringAuto ? " (division default)" : " (overridden)") + '</label><select id="bModel" data-f="scoring">' + Object.keys(MODELS).map(function(k){ return opt(k, MODELS[k].long, st.scoring); }).join("") + '</select></div>' +
     '<div><label for="bPar">Par Time (s)' + (st.scoring === "positive" ? " – required" : "") + '</label><input id="bPar" type="number" min="0" step="0.5" data-f="parTime" data-type="numnull" value="' + (st.parTime == null ? "" : st.parTime) + '"' + (st.scoring === "positive" || st.scoring === "lr" || st.scoring === "qs" ? "" : " disabled") + '></div>' +
-    '<div><label>Stage type</label><label class="inl"><input type="checkbox" id="bLimited" data-f="limited" data-type="bool"' + (st.limited ? " checked" : "") + '> Limited (fixed round count)</label><label class="inl"><input type="checkbox" id="bCover" data-f="cover" data-type="bool"' + (st.cover ? " checked" : "") + '> Cover bonus applied</label><label for="bCoverN" class="inl">Cover items <input id="bCoverN" type="number" min="0" step="1" style="width:4.5em" data-f="coverItems" data-type="intnull" value="' + (st.coverItems == null ? "" : st.coverItems) + '"' + (st.cover || st.division === "CQ" ? "" : " disabled") + '></label></div></div>' +
+    '<div><label>Stage type</label><label class="inl"><input type="checkbox" id="bLimited" data-f="limited" data-type="bool"' + (st.limited ? " checked" : "") + '> Limited (fixed round count)</label><label class="inl"><input type="checkbox" id="bCover" data-f="cover" data-type="bool"' + (st.cover ? " checked" : "") + '> Cover bonus applied</label><label for="bCoverN" class="inl">Cover items <input id="bCoverN" type="number" min="0" step="1" style="width:4.5em" data-f="coverItems" data-type="intnull" value="' + (st.coverItems == null ? "" : st.coverItems) + '"' + (st.cover || st.division === "CQ" ? "" : " disabled") + '></label><span class="small muted" id="bCoverMap">' + (st.coverAuto ? "auto from map: " : "map has ") + coverPropCount(st) + ' (barrels, V-Tacs, doorways, apertures)</span>' + (st.coverAuto ? "" : ' <button class="small" data-act="coverAuto" id="bCoverAuto">Count from map</button>') + '</div></div>' +
     '<div class="grid4"><div><label for="bDown">Downrange direction (° clockwise from up the page)</label><input id="bDown" type="number" step="5" data-f="downrange" data-type="num" value="' + (st.downrange || 0) + '"></div>' +
     /* Ranking select (#bRank: default / same class only / open) removed with class ranking */ "" +
     '<div><label>Print layout</label><label class="inl"><input type="checkbox" id="bDiagPage" data-f="diagramPage" data-type="bool"' + (st.diagramPage ? " checked" : "") + '> Diagram on its own page</label></div>' +
@@ -2056,6 +2062,7 @@ function onBriefChange(ev){
       else if(ty === "intnull"){ v = v === "" ? null : parseInt(v, 10); if(v !== null && (isNaN(v) || v < 0)) v = null; }
       else if(ty === "numnull"){ v = v === "" ? null : parseFloat(v); if(v !== null && isNaN(v)) v = null; }
       st[f] = v;
+      if(f === "coverItems") st.coverAuto = v === null;
       if(f === "division" && st.scoringAuto) st.scoring = DIVS[v].model;
       if(f === "division" && v === "CQ") st.cover = true;
       if(f === "division" && v === "LR") st.cover = false;
@@ -2108,6 +2115,7 @@ function onBriefClick(ev){
   var b = ev.target.closest("[data-act]"); if(!b) return;
   var st = cur(), act = b.getAttribute("data-act"), row = b.closest("tr");
   var eid = row && row.getAttribute("data-eng"), i = eid ? st.engagements.map(function(x){ return x.id; }).indexOf(eid) : -1;
+  if(act === "coverAuto"){ commit(function(){ st.coverAuto = true; }); return; }
   if(act === "engAdd"){
     commit(function(){ var last = lastEng(st), pos = last ? last.pos : st.items.filter(isPos)[0].id;
       var engaged = {}; st.engagements.forEach(function(e){ engaged[e.target] = 1; });
@@ -2227,6 +2235,7 @@ function propsText(st){
     var tail = (v.portNote ? "; " + v.portNote : "") + (refs.length ? "; " + refs.join(", ") : "");
     parts.push("V-Tac barricade, " + fmtM(L) + " (" + extra.join(", ") + tail + ")");
   });
+  [["door","doorway","doorways"],["port","aperture","apertures"]].forEach(function(d){ var n = st.items.filter(function(i){ return i.type === d[0]; }).length; if(n) parts.push(n + " x " + (n > 1 ? d[2] : d[1]) + " (cover)"); });
   ["concrete","tyres","backstop"].forEach(function(t){ st.items.filter(function(i){ return i.type === t; }).forEach(function(v){
     parts.push((t === "concrete" ? "Concrete wall (fixed)" : t === "tyres" ? "Tyre wall (fixed)" : "Backstop / berm (270° range)") + ", " + fmtM(Math.hypot(v.x2 - v.x, v.y2 - v.y)) + (v.label ? " (" + v.label + ")" : "")); }); });
   return parts.join("; ");
@@ -2633,7 +2642,7 @@ function helpHTML(){
   '<li><b>Sight line</b> (<kbd>L</kbd>): click a position, then each target it engages. Each click adds an engagement row (red dashed line with the distance). Set firearm and rounds in the Stage brief tab.</li>' +
   '<li><b>Movement</b> (<kbd>M</kbd>): click positions in the order they are visited; numbered arrows are drawn. “Path −1” removes the last step.</li>' +
   '<li><b>Measure</b> (<kbd>K</kbd>): click two points. Coordinates: x is metres to the right, “downrange” is metres up the page.</li>' +
-  '<li>Labels are automatic (T1… for paper, P1… for steel, SP1… for positions, B1… for barrels) and editable in Properties. No-shoots and hostages: place them from the palette (NS1…), or tick “No-shoot / hostage stapled on” on any paper target (left, right, top, bottom or covering the head / upper body). Set the hit requirement per target in the Stage brief.</li><li><b>FBI QIT-99</b> (grey-green bottle) is for specialised events, scored as per the individual qualification shoot requirements: its zones print as “Per qualification standard (brief)”. Name the standard under Stage brief → Qualification standard.</li><li><b>Barrel (blue)</b> is cover (single ≈ 0.9 m, kneeling / low cover; stacked double ≈ 1.8 m, standing cover). Only the <b>dump barrel</b> counts for dump-barrel transitions; it can be drawn red or blue. <b>V-Tac barricade</b>: one click places a 1.2 m panel; drag its ends or set length, height and ports in Properties. An SP can be set to shoot through a V-Tac port.</li></ul>' +
+  '<li>Labels are automatic (T1… for paper, P1… for steel, SP1… for positions, B1… for barrels) and editable in Properties. No-shoots and hostages: place them from the palette (NS1…), or tick “No-shoot / hostage stapled on” on any paper target (left, right, top, bottom or covering the head / upper body). Set the hit requirement per target in the Stage brief.</li><li><b>FBI QIT-99</b> (grey-green bottle) is for specialised events, scored as per the individual qualification shoot requirements: its zones print as “Per qualification standard (brief)”. Name the standard under Stage brief → Qualification standard.</li><li><b>Barrel (blue)</b> is cover (single ≈ 0.9 m, kneeling / low cover; stacked double ≈ 1.8 m, standing cover). Only the <b>dump barrel</b> counts for dump-barrel transitions; it can be drawn red or blue. <b>V-Tac barricade</b>: one click places a 1.2 m panel; drag its ends or set length, height and ports in Properties. An SP can be set to shoot through a V-Tac port.</li><li><b>Cover items</b>: blue barrels (a stack counts once), V-Tac barricades, <b>doorways</b> and <b>apertures / windows</b> are cover. With the cover bonus on, Stage brief → Cover items counts them from the map automatically; type a number to override, or press “Count from map” to go back to automatic.</li></ul>' +
   '<h3>Keyboard and mouse shortcuts</h3><p class="small muted">On the Diagram tab; keys are ignored while you type in a field.</p><table class="keys" id="keyTable"><tbody>' +
   [["V", "Select / move tool"], ["L", "Sight line tool"], ["M", "Movement tool"], ["K", "Measure tool"],
    ["+ or = (numpad +)", "Zoom in around the view centre"], ["− (numpad −)", "Zoom out"], ["0", "Fit – show the whole stage"],
